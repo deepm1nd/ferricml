@@ -1,42 +1,220 @@
-# ferricML: Universal Machine Learning Framework
-## Comprehensive Architecture Specification v3.0
+# Architecture Specification: ferricML
+v.0.0.01
 
-**Date:** November 2025
-**Status:** Technical Specification - Implementation Ready
-**Target:** Senior Rust Engineers & AI/ML Systems Developers
+## Table of Contents
+- [1. Introduction](#1-introduction)
+- [2. Product & User Requirements](#2-product--user-requirements)
+- [3. Acceptance Criteria](#3-acceptance-criteria)
+- [4. System Architecture](#4-system-architecture)
+- [5. External Interfaces & Integrations](#5-external-interfaces--integrations)
+- [6. Constraints & Assumptions](#6-constraints--assumptions)
+- [7. Appendices (Detailed Implementation)](#7-appendices-detailed-implementation)
+- [Appendix R - Revision History](#appendix-r---revision-history)
 
 ---
 
-## Master Table of Contents
+## 1. Introduction
+### 1.1. Document Purpose and Audience
+This document provides a comprehensive technical architecture for ferricML, an end-to-end ML platform for Rust. It serves as the single source of truth for implementation, integrating concepts from neural networks, tree-based models, and probabilistic models.
 
-| Section | Title | Focus Area |
+### 1.2. Product/System Overview
+ferricML is a pure-Rust machine learning framework that provides both eager execution for rapid prototyping and graph compilation for production performance. It utilizes a multi-level IR (FML-IR) stack and targets CPU, CUDA, ROCm, and TPU.
+
+### 1.3. Problem Statement & Vision
+Currently, Rust developers must choose between high-level bindings to C++ frameworks or low-level libraries. ferricML provides a unified, native platform that leverages Rust's safety and performance while maintaining the ergonomics of PyTorch.
+
+### 1.4. Goals & Objectives
+- **Safety:** 100% pure Rust for the core execution engine.
+- **Performance:** Within 10% of native backend performance via MLIR-based optimization.
+- **Portability:** Unified API across diverse hardware (CPU/GPU/TPU).
+
+### 1.5. Definitions, Acronyms, and Abbreviations
+- **ASG:** Abstract Semantic Graph
+- **AOT-AD:** Ahead-of-Time Automatic Differentiation
+- **SSA:** Static Single Assignment
+- **MLIR:** Multi-Level Intermediate Representation
+
+### 1.6. References
+1. LLVM & MLIR Language References.
+2. StableHLO Specification.
+
+---
+
+## 2. Product & User Requirements
+### 2.1. Target Audience & User Personas
+- **ML Researchers:** Require dynamic tracing and ease of debugging.
+- **Production Engineers:** Require static graph optimization and stable deployment formats.
+
+### 2.2. User Scenarios / Use Cases
+- Training deep neural networks with complex control flow.
+- Deploying low-latency tree-based inference on the edge.
+- Distributed training across multi-GPU clusters.
+
+### 2.3. Core Functional Requirements
+Refer to `docs/ferricML_requirements.md` for the full list of FML-FUNC requirements.
+
+### 2.4. Non-Functional Requirements
+Refer to `docs/ferricML_requirements.md` for the full list of FML-NFR requirements.
+
+---
+
+## 3. Acceptance Criteria
+
+### 3.1. Functional Requirements Acceptance
+
+| Requirement ID | Acceptance Criterion | Verification Method |
 | :--- | :--- | :--- |
-| I | **Core Type System & Memory Model** | DType trait, symbolic tensors, memory pools, and UVA. |
-| II | **FML Intermediate Representation (FML-IR)** | Multi-level SSA-based dialects (Tensor, Structured, Target). |
-| III | **Dynamic Graph Capture & AOT-AD Engine** | Safe Tracing, ShapeGuards, and Ahead-of-Time Autodiff. |
-| IV | **CUDA Backend Implementation** | NVVM/PTX pipeline, Tensor Cores, and Fat Binaries. |
-| V | **CPU Backend & Vectorization** | LLVM, SIMD (AVX-512/NEON), and NUMA awareness. |
-| VI | **ROCm & TPU Backend Integration** | ROCDL/HSACO and StableHLO/XLA pipelines. |
-| VII | **Automatic Differentiation Engine** | Tape-based recording, reverse-mode algorithms, and custom grads. |
-| VIII | **Optimization Pass Infrastructure** | Fusion, MPA, Bufferization, and Auto-tuning. |
-| IX | **Neural Network Modules** | High-level API, standard layers, and Transformer components. |
-| X | **Tree-Based Models & Ensemble Methods** | GBDT, Random Forests, EFB, and GOSS optimizations. |
-| XI | **Probabilistic Graphical Models** | Bayesian Networks, MRFs, and inference algorithms. |
-| XII | **Distributed Training & Serialization** | Data/Model/Pipeline parallelism and fault-tolerant checkpoints. |
+| **FML-FUNC-001** | Symbolic Tensor must record op in ASG without immediate allocation. | Unit test verifying deferred allocation. |
+| **FML-FUNC-002** | IR must support L1, L2, and L3 dialects with lowering passes. | Compiler pass test emitting valid textual format. |
+| **FML-FUNC-003** | `#[ferric::compile]` must trace control flow correctly. | Macro expansion verification. |
+| **FML-FUNC-004** | AOT-AD must generate gradient nodes in the L1 IR. | Inspection of differentiated IR. |
+| **FML-FUNC-005** | Neural Network training must decrease loss on standard MNIST task. | Integration test (Training run). |
+| **FML-FUNC-006** | GBDT must support histogram-based splits. | Comparison against reference implementations. |
+| **FML-FUNC-007** | PGM must support Variable Elimination. | Logical check of joint probability results. |
+| **FML-FUNC-008** | CUDA backend must utilize WMMA for Tensor Cores. | PTX inspection for `wmma` instructions. |
+| **FML-FUNC-009** | CPU backend must support AVX-512. | SIMD instruction verification. |
+| **FML-FUNC-010** | Distributed training must scale linearly up to 4 GPUs. | Speedup ratio benchmark. |
+| **FML-FUNC-011** | `ShapeGuard` must detect shape mismatch and trigger fallback. | Runtime fallback test case. |
+| **FML-FUNC-012** | Model serialization must be bit-identical. | Hash comparison of serialized data. |
+| **FML-FUNC-013** | Operator fusion must reduce kernel count. | Kernel launch telemetry comparison. |
+| **FML-FUNC-014** | MPA must insert BF16 casts automatically. | IR inspection for `fml.cast` ops. |
+| **FML-FUNC-015** | SVM must solve dual problem via SMO. | Convergence verification on SVM task. |
+
+### 3.2. Non-Functional Requirements Acceptance
+
+| Requirement ID | Acceptance Criterion | Verification Method |
+| :--- | :--- | :--- |
+| **FML-NFR-001** | No non-Rust dependencies in the core runtime. | `cargo tree` audit. |
+| **FML-NFR-002** | Default log level is `NOTICE`. | Initialization test. |
+| **FML-NFR-003** | GEMM performance within 10% of cuBLAS. | Performance benchmarking. |
+| **FML-NFR-004** | UVA must allow direct device-to-device pointers. | Memory pointer validity test. |
+| **FML-NFR-005** | Allocation latency must be below 100μs. | Micro-benchmarking (Criterion). |
+| **FML-NFR-008** | Fault-tolerant recovery in under 5 minutes. | Node failure simulation. |
 
 ---
 
-## I. Core Type System & Memory Model
+## 4. System Architecture
 
-### I.1. Design Philosophy
-ferricML's type system follows three core principles:
-1. **Static Safety:** Leverage Rust's type system to prevent runtime errors.
-2. **Zero-Cost Abstraction:** No runtime overhead for type information during hot paths.
-3. **Hardware Awareness:** Types encode alignment, layout, and device placement.
+### 4.1. Architectural Goals & Constraints
+The architecture must maximize throughput and minimize latency while providing a safe, multi-paradigm environment. Constraints include the strict requirement for static shapes on TPU backends.
 
-### I.2. The DType Trait
-The `DType` trait is the foundation for all numeric operations in ferricML.
+### 4.2. Architectural Principles
+- **Backend Decorator Pattern:** Separation of concerns between AD logic and hardware execution.
+- **Progressive Lowering:** IR transformations that preserve semantic intent at high levels and optimize memory at low levels.
 
+### 4.3. System Context Diagram (C4 Level 1)
+```mermaid
+graph LR
+    User[Rust Developer] -- "Defines Model" --> FML[ferricML Platform]
+    FML -- "Compiles & Executes" --> Hardware[CPU / GPU / TPU]
+    FML -- "Communicates" --> Clusters[Distributed Nodes]
+```
+
+### 4.4. Modular Decomposition Diagram (C4 Level 2/3)
+```mermaid
+graph TD
+    subgraph "ferricML Framework"
+        Core[ferric-core] --> ASG[ferric-asg]
+        ASG --> Compiler[ferric-compiler]
+        Compiler --> Runtime[ferric-runtime]
+        Runtime --> Backends[Hardware Backends]
+    end
+```
+
+### 4.5. Logical View (Component Diagram)
+- **Frontend:** API and Procedural Macros.
+- **Middleware:** ASG and AOT-AD Engine.
+- **Compiler:** Pass Manager and MLIR Dialects.
+- **Runtime:** Storage, Allocators, and Dispatchers.
+
+### 4.6. Process View (Runtime/Concurrency Diagram)
+Tracing -> ASG Construction -> AOT-AD -> L1 IR -> L2 IR (Fusion) -> Bufferization -> L3 IR (Codegen) -> Execution.
+
+### 4.7. Physical View (Deployment Diagram)
+- **Client Application:** Links `ferricML` as a library.
+- **Worker Nodes:** Distributed execution processes for multi-node training.
+
+### 4.8. Data View (High-Level Schema & Data Flow)
+- **Input:** Tensors and Hyperparameters.
+- **Internal:** ASG Nodes and IR SSA values.
+- **Output:** Serialized Model Artifacts.
+
+### 4.9. Data Models
+Tensors are defined by their `DType`, `Shape`, and `Device`. ASG nodes store `OpType` and input/output references.
+
+### 4.10. Key Architectural Decisions & Rationale
+- **Decision:** Use an MLIR-inspired stack. **Rationale:** Provides the best path for multi-hardware support and reuses industry-standard optimization logic.
+- **Decision:** Pure Rust Execution. **Rationale:** Eliminates the Python runtime overhead and ensures total memory safety for large-scale training.
+
+### 4.11. Architecture Decision Records (ADRs)
+- **ADR-001:** Adopting melior for MLIR bindings to ensure stable integration with LLVM infrastructure.
+
+### 4.12. Paths Not Taken
+- **Source-to-C++ Translation:** Rejected due to excessive compile times and difficulty in maintaining safety guarantees.
+
+### 4.13. Technical Non-Functional Requirements
+- **Thread-Safety:** All shared components must be `Send + Sync`.
+- **Liveness Analysis:** Must be performed in O(N) time for efficient compilation.
+
+### 4.14. User Experience (UX) & User Interface (UI) Design
+APIs are designed to be builder-centric for model definition and functional for tensor manipulation. Error messages must leverage Rust's diagnostic system to provide actionable feedback during macro expansion.
+
+### 4.15. Component Responsibility Collaborator (CRC) Cards
+- **Compiler:** Responsibilities include lowering and fusion. Collaborates with Dialects and PassManager.
+- **Runtime:** Responsibilities include allocation and launch. Collaborates with Storage and Streams.
+
+### 4.16. Sequence Diagrams
+1. User calls `model.forward()`.
+2. Macro traces call into ASG.
+3. AD engine generates backward graph.
+4. Pass manager applies fusion.
+5. Backend emits PTX/SASS.
+
+### 4.17. Logging and Monitoring
+- **Logging Strategy:** 8-level system (Emergency to Debug).
+- **Default Level:** `NOTICE`.
+- **Configuration:** Set via `FERRIC_LOG` environment variable.
+- **Monitoring:** Integrated telemetry for GPU memory and power via sidecar hooks.
+
+### 4.18. Primary Dependencies
+- `melior`
+- `llvm-sys`
+- `rayon`
+- `serde`
+- `cuda-sys` / `hip-sys`
+
+---
+
+## 5. External Interfaces & Integrations
+### 5.1. External System Interfaces
+- **XLA:** Lowering interface for TPUs.
+- **NCCL:** Multi-GPU communication protocol.
+
+### 5.2. Third-Party Integrations
+- Support for ONNX model import/export for cross-framework compatibility.
+
+### 5.3. API Specifications (External)
+C-compatible ABI for the runtime to allow linking into non-Rust production environments.
+
+---
+
+## 6. Constraints & Assumptions
+### 6.1. Technical Constraints
+- Requires modern GPUs with support for FP16/BF16 for optimal MPA performance.
+
+### 6.2. Business Constraints
+- Distributed training requires high-bandwidth interconnects (e.g., InfiniBand) for linear scaling.
+
+### 6.3. Assumptions
+- Host system has `rustc` and `clang` (LLVM) toolchains installed.
+
+---
+
+## 7. Appendices (Detailed Implementation)
+
+### 7.1. Section I: Core Type System & Memory Model Implementation
+
+#### 7.1.1. DType Trait and Scalar Systems
 ```rust
 pub trait DType: Copy + Send + Sync + 'static {
     const SIZE: usize;
@@ -46,44 +224,45 @@ pub trait DType: Copy + Send + Sync + 'static {
     const TYPE_ID: TypeId;
     const SIMD_CAPABLE: bool;
     const SIMD_WIDTH: usize;
-
     fn from_f64(val: f64) -> Self;
     fn to_f64(self) -> f64;
 }
-```
 
-**TypeId Enumeration:**
-```rust
 #[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum TypeId {
-    Float16, BFloat16, Float32, Float64,
-    Int8, Int16, Int32, Int64,
-    UInt8, UInt16, UInt32, UInt64,
-    Bool, Complex64, Complex128,
-    QInt8, QUInt8, QInt32
+    Float16 = 0, BFloat16 = 1, Float32 = 2, Float64 = 3,
+    Int8 = 4, Int16 = 5, Int32 = 6, Int64 = 7,
+    UInt8 = 8, UInt16 = 9, UInt32 = 10, UInt64 = 11,
+    Bool = 12, Complex64 = 13, Complex128 = 14,
+    QInt8 = 15, QUInt8 = 16, QInt32 = 17,
 }
 ```
 
-### I.3. The Symbolic ferricML Tensor
-Tensors in ferricML are primarily symbolic handles linking to the Abstract Semantic Graph (ASG). This ensures a "Define-then-Run" paradigm.
-
+#### 7.1.2. Memory Model and Allocators
+ferricML uses a multi-tier memory strategy. The `MemoryPool` implements a B-Tree for free block tracking to ensure $O(\log N)$ allocation time.
 ```rust
-pub struct Tensor<B: FerricBackend> {
-    id: u64, // Unique ID linking to the ASG::Node
-    dtype: B::FloatElem,
-    shape: Shape,
-    device: B::Device,
-    grad_fn_ref: Option<GradFnId>,
+pub struct MemoryPool {
+    free_blocks: BTreeMap<usize, Vec<*mut u8>>,
+    allocated: HashMap<*mut u8, BlockInfo>,
+    total_allocated: AtomicUsize,
+    device: Device,
+}
+
+impl MemoryPool {
+    pub fn allocate(&mut self, size: usize, alignment: usize) -> Result<*mut u8> {
+        let size = size.next_power_of_two();
+        if let Some(blocks) = self.free_blocks.get_mut(&size) {
+            if let Some(ptr) = blocks.pop() {
+                return Ok(ptr);
+            }
+        }
+        self.allocate_new(size, alignment)
+    }
 }
 ```
 
-### I.4. Memory Management & Storage
-ferricML abstracts physical memory through a multi-backend storage system.
-
-- **Unified Virtual Addressing (UVA):** Single address space across CPU and accelerators.
-- **Memory Pool Allocator:** Uses a B-Tree based management system to minimize fragmentation.
-- **Buffer Reuse Optimization (BReO):** Leverages lifetime analysis to reuse memory blocks between non-interfering tensors.
-
+#### 7.1.3. Storage Backend Implementation
 ```rust
 pub enum Storage {
     Cpu(CpuStorage),
@@ -101,33 +280,29 @@ pub struct CpuStorage {
 }
 ```
 
----
+#### 7.1.4. Tensor Views and Zero-Copy
+```rust
+impl<T: DType> Tensor<T> {
+    pub fn view(&self, new_shape: &[usize]) -> Result<Self> {
+        Ok(Self {
+            storage: Arc::clone(&self.storage),
+            shape: Shape::new(new_shape),
+            strides: Strides::contiguous(&Shape::new(new_shape)),
+            offset: self.offset,
+            device: self.device.clone(),
+            ..self
+        })
+    }
+}
+```
 
-## II. FML Intermediate Representation (FML-IR)
+### 7.2. Section II: FML Intermediate Representation (FML-IR)
 
-FML-IR is a multi-level stack based on Static Single Assignment (SSA) form, allowing progressive lowering from high-level machine learning concepts to low-level hardware instructions.
-
-### II.1. IR Dialect Hierarchy
-
-1.  **ferric-Tensor Dialect (L1):**
-    - **Purpose:** High-level semantic graph.
-    - **Ops:** `fml.matmul`, `fml.conv2d`, `fml.tree.predict`.
-    - **Types:** Uses `tensor<...>` types, supporting dynamic dimensions.
-2.  **ferric-Structured Dialect (L2):**
-    - **Purpose:** Target-agnostic loop optimization (Linalg-on-Tensors).
-    - **Ops:** `linalg.generic`, `scf.for`, `scf.parallel`.
-    - **Constraint:** Requires static shapes resolved by the compiler.
-3.  **ferric-Target Dialect (L3):**
-    - **Purpose:** Direct hardware/memory interface.
-    - **Ops:** `gpu.launch`, `tpu.execute`, `llvm.intrinsics`.
-    - **Types:** Uses `memref<...>` types with explicit strides and memory spaces.
-
-### II.2. IR Structure in Rust
+#### 7.2.1. IR Structure and SSA Form
 ```rust
 pub struct Module {
     name: String,
     functions: Vec<Function>,
-    constants: HashMap<SymbolRef, Constant>,
     types: TypeTable,
 }
 
@@ -136,745 +311,198 @@ pub struct Operation {
     kind: OpKind,
     operands: Vec<Value>,
     results: Vec<Value>,
+    result_types: Vec<Type>,
     attributes: AttributeDict,
 }
 ```
 
----
+#### 7.2.2. Dialect System
+1. **L1 (Tensor):** High-level operations.
+2. **L2 (Structured):** Loop-nest optimization using `linalg.generic`.
+3. **L3 (Target):** Hardware-specific primitives.
 
-## III. Dynamic Graph Capture & AOT-AD Engine
+#### 7.2.3. Affine Maps for Memory Indexing
+```rust
+pub struct AffineMap {
+    num_dims: usize,
+    num_symbols: usize,
+    results: Vec<AffineExpr>,
+}
 
-To achieve PyTorch-like flexibility with XLA-like performance, ferricML uses a "Define-by-Run-and-Compile" approach.
+pub enum AffineExpr {
+    Dim(usize),
+    Symbol(usize),
+    Constant(i64),
+    Add(Box<AffineExpr>, Box<AffineExpr>),
+    Mul(Box<AffineExpr>, Box<AffineExpr>),
+}
+```
 
-### III.1. Safe Tracing via Procedural Macros
-The `#[ferric::compile]` macro performs static analysis on the forward function. It instruments control flow and identifies data-dependent branches.
+#### 7.2.4. Control Flow and CFG
+Basic blocks represent the structure of the computation graph. Terminators (`br`, `cond_br`, `return`) define the edges of the CFG.
 
-### III.2. Runtime ShapeGuard Mechanism
-For every execution path captured, a `ShapeGuard` is inserted at the entry point.
-- **Validation:** On subsequent executions, it verifies if input shapes and control flow paths match the compiled trace.
-- **Failure Mode:** If validation fails, the system falls back to the safe Eager execution path, preventing incorrect kernel execution.
+### 7.3. Section III: Dynamic Graph Capture & AOT-AD Engine
 
-### III.3. Ahead-of-Time Automatic Differentiation (AOT-AD)
-Once traced and guarded, the engine performs reverse traversal of the ASG *before* IR lowering.
-- **Unified Forward-Backward DAG:** This generates a single graph containing both forward and backward operations.
-- **Cross-Boundary Optimization:** Allows the compiler to optimize the entire training step simultaneously (e.g., fusing weight updates with gradient calculations).
+#### 7.3.1. ASG Node Structure
+```rust
+pub struct ASGNode {
+    pub op_type: OpType,
+    pub inputs: Vec<u64>,
+    pub requires_grad: bool,
+    pub backward_closure: Box<dyn Fn(Vec<Tensor>) -> Vec<Tensor>>,
+}
+```
 
----
+#### 7.3.2. Safe Tracing and ShapeGuards
+Tracing occurs during the first run. The `ShapeGuard` validates subsequent executions.
+```rust
+pub struct ShapeGuard {
+    recorded_shapes: Vec<Shape>,
+    control_flow_path: Vec<bool>,
+}
+```
 
-## IV. CUDA Backend Implementation
+#### 7.3.3. AOT-AD Reverse Traversal
+The engine performs a reverse topological sort on the ASG and applies backward closures to generate the adjoint graph.
 
-The CUDA backend targets NVIDIA GPUs by lowering FML-Target IR to NVVM IR and subsequently to PTX.
+### 7.4. Section IV: CUDA Backend Implementation
 
-### IV.1. Thread Hierarchy Mapping
-ferricML maps IR parallel loops to CUDA's grid/block/warp hierarchy.
-- **Warp-Level Primitives:** Uses `__shfl_sync` and `__ballot_sync` for efficient reductions.
-- **Tensor Cores:** Targets the WMMA (Warp Matrix Multiply-Accumulate) API for accelerated GEMM and Convolution operations.
+#### 7.4.1. NVVM/PTX Lowering Pipeline
+L3 IR is lowered to the NVVM dialect, which is then compiled to PTX by the LLVM NVPTX backend.
 
-### IV.2. Memory Hierarchy Utilization
-- **Shared Memory:** Automatically managed via a tiling pass in the compiler.
-- **Bank Conflicts:** Padding is inserted into shared memory buffers to ensure maximum throughput.
-- **Coalescing:** The Layout Optimization pass ensures global memory accesses are coalesced.
+#### 7.4.2. Tensor Core Integration (WMMA)
+```cuda
+#include <mma.h>
+using namespace nvcuda;
+__global__ void tensor_core_matmul(const half* A, const half* B, float* C) {
+    wmma::fragment<wmma::matrix_a, 16, 16, 16, half, wmma::row_major> a_frag;
+    // ... load, mma, store
+}
+```
 
-### IV.3. Fat Binary Generation
-ferricML embeds architecture-agnostic PTX and multiple AOT-compiled SASS versions (e.g., sm_80, sm_90) into a single "Fat Binary" for deployment robustness.
+#### 7.4.3. Shared Memory Tiling and Occupancy
+Tiling passes analyze the iteration space and insert shared memory buffers to maximize throughput. Occupancy is optimized by adjusting block sizes.
 
----
+#### 7.4.4. Stream Management
+Asynchronous execution is handled via a `StreamPool`.
 
-## V. CPU Backend & Vectorization
+### 7.5. Section V: CPU Backend & Vectorization
 
-The CPU backend utilizes LLVM to generate high-performance native machine code.
+#### 7.5.1. LLVM Code Generation
+Utilizes JIT for custom kernels and AOT for standard primitives.
 
-### V.1. SIMD Abstraction Layer
-A unified trait-based abstraction allows the compiler to target AVX2, AVX-512 (Intel/AMD), and NEON (ARM) without changing the optimization logic.
+#### 7.5.2. SIMD Abstractions (AVX-512, NEON)
+Trait-based vectorization allows unified code for Intel and ARM hardware.
+```rust
+pub trait SimdOps<T> {
+    type Vector;
+    fn load_unaligned(ptr: *const T) -> Self::Vector;
+    fn fma(a: Self::Vector, b: Self::Vector, c: Self::Vector) -> Self::Vector;
+}
+```
 
-### V.2. Cache-Aware Optimization
-- **Blocking/Tiling:** Matrix multiplication and convolution use blocked layouts to maximize L1/L2 cache hits.
-- **NUMA Awareness:** The runtime includes a NUMA-aware allocator and thread-binding logic to minimize cross-socket memory traffic on servers.
+#### 7.5.3. Cache-Aware Tiling
+Matrix operations use blocked layouts to maximize L1/L2 cache locality.
 
-### V.3. Work-Stealing Thread Pool
-ferricML implements a custom work-stealing scheduler to balance parallel workloads across many CPU cores, preventing "tail latency" issues in batch processing.
+#### 7.5.4. NUMA Awareness and Thread Pools
+Work-stealing pools balance load, while NUMA binding prevents memory performance degradation across sockets.
 
----
+### 7.6. Section VI: ROCm & TPU Backend Integration
 
-## VI. ROCm & TPU Backend Integration
+#### 7.6.1. ROCDL/HSACO Pipeline
+Targets AMD GPUs through the ROCm compiler stack.
 
-### VI.1. AMD ROCm Pipeline
-- **Lowering:** FML-Target -> ROCDL IR -> HSA Code Object (HSACO).
-- **Toolchain:** Seamless integration with `hipcc` and `amdclang++`.
-- **Matrix Cores:** Leverages CDNA Matrix Core intrinsics for competitive performance against CUDA.
+#### 7.6.2. StableHLO/XLA Integration
+The primary path for TPU acceleration. Strict shape specialization is enforced before lowering to StableHLO.
 
-### VI.2. Google TPU via XLA
-- **Strict Static Shapes:** mandatory resolution of all dynamic dimensions before translation.
-- **StableHLO:** FML-IR Level 1 is translated directly to StableHLO, the input dialect for the XLA compiler.
-- **Systolic Array Tiling:** The compiler automatically tiles data into 128x8 chunks to match the TPU's hardware structure.
+### 7.7. Section VII: Automatic Differentiation Engine
 
-
----
-
-## VII. Automatic Differentiation Engine
-
-ferricML supports reverse-mode automatic differentiation through both tape-based recording (for Eager mode) and symbolic transformation (for Compiled mode).
-
-### VII.1. Tape-Based Recording
-During Eager execution, operations are recorded on a `ComputationTape`.
-
+#### 7.7.1. Tape-Based Recording
+During eager mode, operations are recorded on a `ComputationTape`.
 ```rust
 pub struct TapeEntry {
     op: Operation,
     inputs: Vec<TensorId>,
     output: TensorId,
     grad_fn: Arc<dyn GradientFunction>,
-    saved_tensors: Vec<SavedTensor>,
 }
 ```
 
-### VII.2. Memory-Efficient Backprop
-- **Checkpointing:** Users can mark subgraphs for recomputation to trade compute for memory.
-- **In-place Gradients:** The engine identifies when a gradient can be accumulated in-place into an existing buffer.
+#### 7.7.2. Reverse-Mode Algorithms
+Implements standard backpropagation with support for higher-order derivatives via adjoint-of-adjoint computation.
 
-### VII.3. Higher-Order Derivatives
-ferricML's symbolic transformation on FML-IR enables the generation of Hessian-vector products and Jacobians without forming full matrices.
+#### 7.7.3. Custom Gradients
+Users can define custom gradient functions using a specialized macro.
 
----
+### 7.8. Section VIII: Optimization Pass Infrastructure
 
-## VIII. Optimization Pass Infrastructure
+#### 7.8.1. Pass Manager and Pattern Rewriting
+A unified manager orchestrates passes. Pattern matching enables algebraic simplifications.
+```rust
+pub struct RewriteRule {
+    pattern: Pattern,
+    replacement: Box<dyn ReplacementFn>,
+}
+```
 
-The `PassManager` orchestrates target-agnostic and target-specific transformations on FML-IR.
+#### 7.8.2. Operator Fusion (Vertical/Horizontal)
+Combines adjacent operations into a single kernel to reduce memory traffic.
 
-### VIII.1. Operator Fusion
-- **Vertical Fusion:** Combines producer-consumer chains (e.g., Matmul -> BatchNorm -> ReLU) into a single optimized kernel.
-- **Horizontal Fusion:** Merges independent operations (e.g., multiple element-wise additions) to reduce kernel launch overhead.
+#### 7.8.3. Mixed-Precision Analysis (MPA)
+Statically optimizes for reduced precision where safe.
 
-### VIII.2. Mixed-Precision Analysis (MPA)
-The MPA pass statically analyzes the Unified Forward-Backward DAG.
-- **Optimization:** Heavy compute operations (GEMM, Conv) are cast to FP16 or BF16.
-- **Stability:** Sensitive operations (Loss calculation, Weight updates) are maintained in FP32 using automatic loss scaling.
+#### 7.8.4. Bufferization and BReO
+Memory planning pass that minimizes peak allocation through buffer reuse.
 
-### VIII.3. Auto-Tuning System
-Inspired by TVM, ferricML uses a cost-model-driven auto-tuner.
-- **Search Space:** Different tiling factors and loop unrolling strategies.
-- **Benchmark:** Empirical measurement on the target hardware to find the globally optimal configuration for each kernel.
+### 7.9. Section IX: Neural Network Modules
 
----
-
-## IX. Neural Network Modules
-
-The high-level `nn` API provides ergonomic building blocks for deep learning.
-
-### IX.1. Module Trait
-All layers implement a unified `Module` trait.
-
+#### 7.9.1. Module Trait and Parameter Management
 ```rust
 pub trait Module: Send + Sync {
-    type Input;
-    type Output;
-    fn forward(&self, input: Self::Input) -> Result<Self::Output>;
-    fn parameters(&self) -> Vec<&Tensor>;
-    fn train(&mut self);
-    fn eval(&mut self);
+    fn forward(&self, input: Tensor) -> Result<Tensor>;
+    fn parameters(&self) -> Vec<&Parameter>;
 }
 ```
 
-### IX.2. Built-in Layers
-- **Convolutional:** `Conv2d`, `ConvTranspose2d`.
-- **Normalization:** `BatchNorm`, `LayerNorm`, `GroupNorm`.
-- **Transformers:** Multi-head attention, FFN blocks, and complete Encoder/Decoder layers.
-- **Containers:** `Sequential` and `ModuleList` for complex composition.
+#### 7.9.2. Transformer Architecture Components
+Includes detailed implementations for Self-Attention and FFN blocks.
 
+### 7.10. Section X: Tree-Based Models & Ensemble Methods
+
+#### 7.10.1. Histogram-Based GBDT
+Optimized split finding using binned features.
+
+#### 7.10.2. Exclusive Feature Bundling (EFB)
+Reduces feature count by merging non-conflicting features.
+
+#### 7.10.3. Gradient-based One-Side Sampling (GOSS)
+Accelerates training by focusing on samples with larger gradients.
+
+### 7.11. Section XI: Probabilistic Graphical Models
+
+#### 7.11.1. Exact Inference (Variable Elimination)
+Sequential marginalization of potential factors.
+
+#### 7.11.2. Approximate Inference (Gibbs, VI)
+MCMC and Variational methods for large or continuous networks.
+
+#### 7.11.3. HMM Implementation (Viterbi, Forward-Backward)
+Dynamic programming for sequence modeling.
+
+### 7.12. Section XII: Distributed Training & Serialization
+
+#### 7.12.1. Distributed Data Parallel (DDP)
+Multi-GPU training with synchronous gradient averaging.
+
+#### 7.12.2. Pipeline Parallelism and Microbatching
+Overlap of computation and communication for massive models.
+
+#### 7.12.3. Model Serialization and Fault Tolerance
+Bincode/FlatBuffers for checkpoints. Automated recovery from state snapshots.
 
 ---
 
-## X. Tree-Based Models & Ensemble Methods
-
-ferricML provides first-class support for classical machine learning through optimized IR lowering.
-
-### X.1. Decision Tree Construction
-- **Criteria:** Supports Gini Impurity, Entropy, and Variance Reduction.
-- **Split Finding:** Implements both Exact and Histogram-based split finding.
-
-### X.2. Ensemble Methods
-- **Gradient Boosting (GBDT):** Implements XGBoost-style boosting with L1/L2 regularization.
-- **Random Forest:** Parallel tree construction using the CPU work-stealing thread pool.
-
-### X.3. Tree Optimizations
-- **GOSS:** Gradient-based One-Side Sampling to reduce sample size during boosting.
-- **EFB:** Exclusive Feature Bundling to reduce feature dimensionality.
-- **Vectorized Prediction:** Trees are compiled into vectorized IR, enabling batch predictions at millions of samples per second.
-
----
-
-## XI. Probabilistic Graphical Models
-
-Support for modeling uncertainty through structured probabilistic relationships.
-
-### XI.1. Representation
-- **Bayesian Networks:** Directed acyclic graphs with Tabular or Gaussian CPDs.
-- **Markov Random Fields:** Undirected models with potential functions.
-
-### XI.2. Inference Algorithms
-- **Exact:** Variable Elimination and Junction Tree propagation.
-- **Approximate:** Gibbs Sampling and Mean-Field Variational Inference.
-
-### XI.3. Learning
-- **Parameter Learning:** Maximum Likelihood Estimation (MLE) and Bayesian estimation.
-- **Structure Learning:** Constraint-based (PC algorithm) and Score-based (Hill climbing) discovery.
-
----
-
-## XII. Distributed Training & Serialization
-
-### XII.1. Distributed Strategies
-- **Data Parallelism:** Replicated models with synchronous gradient All-Reduce (via NCCL/RCCL).
-- **Model Parallelism:** Tensor sharding (Row/Column-wise) for layers too large for a single device.
-- **Pipeline Parallelism:** Microbatch-based execution across multiple stages.
-
-### XII.2. Serialization & Fault Tolerance
-- **Format:** Supports binary serialization via Bincode/FlatBuffers for zero-copy deserialization.
-- **Fault-Tolerant Trainer:** Periodic checkpointing with automatic rollback and recovery from node failures.
-- **Compression:** Optional Gzip/LZ4 compression for large model checkpoints.
-
----
-
-## XIII. Implementation Roadmap
-
-### Phase 1: Foundation (Months 1-3)
-- Core type system and symbolic tensor handles.
-- Basic ASG and FML-IR Level 1.
-- Initial CPU backend with LLVM.
-
-### Phase 2: Compiler & Acceleration (Months 4-6)
-- FML-IR Levels 2 and 3.
-- Safe Tracing and ShapeGuards.
-- CUDA backend and Tensor Core integration.
-
-### Phase 3: Paradigms (Months 7-9)
-- High-level `nn`, `tree`, and `pgm` modules.
-- Autograd AOT-AD engine.
-- ROCm support.
-
-### Phase 4: Scale & Production (Months 10-12)
-- Distributed training infrastructure.
-- XLA/TPU lowering path.
-- Production hardening and auto-tuning.
-
----
-
-**Works Cited:**
-1.  LLVM Language Reference & MLIR Specification.
-2.  PyTorch 2.x (TorchDynamo / Guards) Design.
-3.  "TVM: An Automated End-to-End Optimizing Compiler for Deep Learning", OSDI 2018.
-4.  StableHLO / OpenXLA Documentation.
-
----
-
-## Appendix A: Implementation-Level Details
-
-### A.1. Core Type System & Memory Model Implementation
-
-#### A.1.1 Scalar Implementations
-Each scalar type implements the `DType` trait with specific characteristics:
-
-```rust
-// Float32 Implementation
-impl DType for f32 {
-    const SIZE: usize = 4;
-    const ALIGNMENT: usize = 4;
-    const ZERO: Self = 0.0;
-    const ONE: Self = 1.0;
-    const TYPE_ID: TypeId = TypeId::Float32;
-    const SIMD_WIDTH: usize = 8; // AVX2 can process 8 f32s
-
-    #[inline]
-    fn from_f64(val: f64) -> Self { val as f32 }
-
-    #[inline]
-    fn to_f64(self) -> f64 { self as f64 }
-}
-```
-
-#### A.1.2 Memory Pool Allocator
-The memory pool minimizes allocation latency by reusing blocks:
-
-```rust
-pub struct MemoryPool {
-    /// Free blocks organized by size
-    free_blocks: BTreeMap<usize, Vec<*mut u8>>,
-
-    /// Allocated blocks with their sizes
-    allocated: HashMap<*mut u8, BlockInfo>,
-
-    /// Total allocated bytes
-    total_allocated: AtomicUsize,
-}
-
-impl MemoryPool {
-    pub fn allocate(&mut self, size: usize, alignment: usize) -> Result<*mut u8> {
-        let size = size.next_power_of_two();
-        if let Some(blocks) = self.free_blocks.get_mut(&size) {
-            if let Some(ptr) = blocks.pop() {
-                return Ok(ptr);
-            }
-        }
-        self.allocate_new(size, alignment)
-    }
-}
-```
-
-### A.2. FML-IR Detailed Operation Definitions
-
-#### A.2.1 Tensor Operations
-```rust
-pub enum TensorOp {
-    /// %result = fml.matmul %lhs, %rhs : tensor<MxK>, tensor<KxN> -> tensor<MxN>
-    MatMul,
-    /// %result = fml.conv2d %input, %kernel {stride, padding}
-    Conv2d,
-    /// Element-wise operations
-    Add, Sub, Mul, Div,
-    /// Reduction operations
-    ReduceSum, ReduceMax,
-}
-```
-
-#### A.2.2 Affine Maps for Layouts
-Affine maps express complex memory reindexing for transformations like Transpose or Tiling:
-```rust
-/// Transpose map: (d0, d1) -> (d1, d0)
-pub fn transpose_2d() -> AffineMap {
-    AffineMap {
-        num_dims: 2,
-        num_symbols: 0,
-        results: vec![AffineExpr::Dim(1), AffineExpr::Dim(0)],
-    }
-}
-```
-
-
-### A.3. CUDA Backend Deep Dive
-
-#### A.3.1 Launch Configuration
-```rust
-#[derive(Debug, Clone, Copy)]
-pub struct LaunchConfig {
-    pub grid_dim: Dim3,
-    pub block_dim: Dim3,
-    pub shared_mem_bytes: usize,
-    pub stream: CudaStream,
-}
-
-impl LaunchConfig {
-    pub fn matrix(m: usize, n: usize, tile_m: u32, tile_n: u32) -> Self {
-        Self {
-            grid_dim: Dim3::new(((n as u32) + tile_n - 1) / tile_n, ((m as u32) + tile_m - 1) / tile_m, 1),
-            block_dim: Dim3::new(tile_n, tile_m, 1),
-            shared_mem_bytes: 0,
-            stream: CudaStream::default(),
-        }
-    }
-}
-```
-
-#### A.3.2 Shared Memory Tiling Example (MatMul)
-```cuda
-#define TILE_SIZE 16
-__global__ void tiled_matmul(const float* A, const float* B, float* C, int M, int N, int K) {
-    __shared__ float As[TILE_SIZE][TILE_SIZE];
-    __shared__ float Bs[TILE_SIZE][TILE_SIZE];
-
-    int tx = threadIdx.x; int ty = threadIdx.y;
-    int row = blockIdx.y * TILE_SIZE + ty;
-    int col = blockIdx.x * TILE_SIZE + tx;
-    float sum = 0.0f;
-
-    for (int t = 0; t < (K + TILE_SIZE - 1) / TILE_SIZE; t++) {
-        As[ty][tx] = A[row * K + t * TILE_SIZE + tx];
-        Bs[ty][tx] = B[(t * TILE_SIZE + ty) * N + col];
-        __syncthreads();
-        for (int i = 0; i < TILE_SIZE; i++) sum += As[ty][i] * Bs[i][tx];
-        __syncthreads();
-    }
-    C[row * N + col] = sum;
-}
-```
-
-### A.4. Autograd Gradient Function Implementations
-
-#### A.4.1 Matrix Multiplication Gradient
-```rust
-pub struct MatMulGradient;
-impl GradientFunction for MatMulGradient {
-    fn backward(&self, grad_output: &Tensor<f32>, saved: &[SavedTensor]) -> Result<Vec<Option<Tensor<f32>>>> {
-        // dL/dA = grad_output @ B^T
-        // dL/dB = A^T @ grad_output
-        let a = saved[0].as_tensor();
-        let b = saved[1].as_tensor();
-        let grad_a = grad_output.matmul(&b.transpose(-1, -2)?)?;
-        let grad_b = a.transpose(-1, -2)?.matmul(grad_output)?;
-        Ok(vec![Some(grad_a), Some(grad_b)])
-    }
-}
-```
-
-### A.5. Optimization Pipeline Details
-
-#### A.5.1 Liveness Analysis for Memory Planning
-```rust
-fn compute_liveness(ir: &FmlIR) -> HashMap<Value, LivenessInterval> {
-    let mut liveness = HashMap::new();
-    let exec_order = ir.topological_sort().unwrap();
-    for (time, op_id) in exec_order.iter().enumerate() {
-        let op = ir.get_operation(*op_id);
-        for &operand in &op.operands {
-            liveness.entry(operand).and_modify(|i: &mut LivenessInterval| i.end = time);
-        }
-        for (idx, _) in op.results.iter().enumerate() {
-            let result = Value::new_op_result(*op_id, idx);
-            liveness.insert(result, LivenessInterval { start: time, end: time });
-        }
-    }
-    liveness
-}
-```
-
-
-### A.6. Neural Network Standard Layers
-
-#### A.6.1 Linear Layer Forward
-```rust
-impl Module for Linear {
-    type Input = Tensor<f32>;
-    type Output = Tensor<f32>;
-    fn forward(&self, input: Self::Input) -> Result<Self::Output> {
-        let mut output = input.matmul(&self.weight.transpose(-1, -2)?)?;
-        if let Some(ref bias) = self.bias {
-            output = output.add(&bias.unsqueeze(0)?)?;
-        }
-        Ok(output)
-    }
-}
-```
-
-### A.7. Tree-Based Models & GBDT
-
-#### A.7.1 Information Gain for Regression
-```rust
-fn compute_split_gain(&self, y: &Tensor<f32>, parent_indices: &[usize], left_indices: &[usize], right_indices: &[usize]) -> Result<f64> {
-    let parent_impurity = self.compute_variance(y, parent_indices)?;
-    let left_impurity = self.compute_variance(y, left_indices)?;
-    let right_impurity = self.compute_variance(y, right_indices)?;
-    let n_parent = parent_indices.len() as f64;
-    let n_left = left_indices.len() as f64;
-    let n_right = right_indices.len() as f64;
-    let weighted_child_impurity = (n_left / n_parent) * left_impurity + (n_right / n_parent) * right_impurity;
-    Ok(parent_impurity - weighted_child_impurity)
-}
-```
-
-### A.8. Distributed Training Logic
-
-#### A.8.1 Gradient Synchronization
-```rust
-fn synchronize_gradients(&mut self) -> Result<()> {
-    let params_per_replica: Vec<Vec<&Tensor<f32>>> = self.replicas.iter().map(|r| r.parameters()).collect();
-    for param_idx in 0..params_per_replica[0].len() {
-        let mut grads: Vec<Tensor<f32>> = params_per_replica.iter().filter_map(|params| params[param_idx].grad()).collect();
-        if !grads.is_empty() {
-            self.comm.all_reduce(&mut grads, ReduceOp::Sum)?;
-            let avg_grad = grads[0].div_scalar(self.devices.len() as f32)?;
-            for replica in &mut self.replicas {
-                let params_mut = replica.parameters_mut();
-                params_mut[param_idx].accumulate_grad(avg_grad.clone())?;
-            }
-        }
-    }
-    Ok(())
-}
-```
-
-
-### A.9. Probabilistic Graphical Models (PGM) Inference
-
-#### A.9.1 Variable Elimination Algorithm
-Variable elimination reduces a complex joint distribution by marginalizing out variables sequentially:
-1. **Factor Creation:** Create factors from the network's Conditional Probability Distributions (CPDs) and evidence.
-2. **Ordering:** Determine an elimination order (e.g., Min-Fill or Min-Degree).
-3. **Elimination:** For each variable to eliminate:
-    a. Find all factors mentioning the variable.
-    b. Multiply these factors.
-    c. Sum out the variable from the product to create a new factor.
-4. **Normalization:** Multiply remaining factors and normalize to get the posterior.
-
-```rust
-fn eliminate_variable(&self, var: NodeIndex, mut factors: Vec<Factor>) -> Result<Vec<Factor>> {
-    let (relevant, others): (Vec<_>, Vec<_>) = factors.into_iter().partition(|f| f.scope.contains(&var));
-    if relevant.is_empty() { return Ok(others); }
-    let product = self.multiply_factors(&relevant)?;
-    let marginalized = product.marginalize(var)?;
-    let mut result = others;
-    result.push(marginalized);
-    Ok(result)
-}
-```
-
-### A.10. Hidden Markov Models (HMM) Algorithms
-
-#### A.10.1 The Viterbi Algorithm
-Finds the most likely sequence of hidden states:
-- **Initialization:** $\delta_1(s) = \pi_s \cdot b_s(o_1)$
-- **Recursion:** $\delta_t(s) = \max_{s'} (\delta_{t-1}(s') \cdot a_{s',s}) \cdot b_s(o_t)$
-- **Termination:** $P^* = \max_s \delta_T(s)$
-
-```rust
-pub fn viterbi(&self, observations: &[usize]) -> Result<Vec<usize>> {
-    let t_max = observations.len();
-    let mut delta = vec![vec![0.0; self.n_states]; t_max];
-    let mut psi = vec![vec![0; self.n_states]; t_max];
-    // Initialization
-    for s in 0..self.n_states { delta[0][s] = self.initial[s] * self.emission[s][observations[0]]; }
-    // Recursion
-    for t in 1..t_max {
-        for s in 0..self.n_states {
-            let (max_val, max_state) = (0..self.n_states).map(|ps| (delta[t-1][ps] * self.transition[ps][s], ps))
-                .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap()).unwrap();
-            delta[t][s] = max_val * self.emission[s][observations[t]];
-            psi[t][s] = max_state;
-        }
-    }
-    // Backtrack to find optimal path
-    let mut path = vec![0; t_max];
-    path[t_max - 1] = delta[t_max - 1].iter().enumerate()
-        .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap()).map(|(i, _)| i).unwrap();
-    for t in (0..t_max - 1).rev() {
-        path[t] = psi[t + 1][path[t + 1]];
-    }
-    Ok(path)
-}
-```
-
-
-### A.11. Advanced Neural Architectures: Transformer Encoder
-
-The Transformer Encoder Layer combines multi-head self-attention with position-wise feed-forward networks:
-
-```rust
-pub struct TransformerEncoderLayer {
-    self_attn: MultiHeadAttention,
-    ffn: FeedForward,
-    norm1: LayerNorm,
-    norm2: LayerNorm,
-}
-
-impl Module for TransformerEncoderLayer {
-    type Input = (Tensor<f32>, Option<Tensor<f32>>);
-    type Output = Tensor<f32>;
-    fn forward(&self, (x, mask): Self::Input) -> Result<Self::Output> {
-        let attn_output = self.self_attn.forward((x.clone(), x.clone(), x.clone(), mask))?;
-        let x = self.norm1.forward(x.add(&attn_output)?)?;
-        let ffn_output = self.ffn.forward(x.clone())?;
-        self.norm2.forward(x.add(&ffn_output)?)
-    }
-}
-```
-
-### A.12. Kernel Methods Implementation: SVM
-
-Support Vector Machines find the optimal hyperplane that maximizes the margin between classes.
-
-#### A.12.1 Quadratic Programming Solver (SMO)
-ferricML implements the Sequential Minimal Optimization (SMO) algorithm to solve the dual optimization problem:
-$$\max_{\alpha} \sum_{i=1}^n \alpha_i - \frac{1}{2} \sum_{i,j=1}^n y_i y_j \alpha_i \alpha_j K(x_i, x_j)$$
-Subject to: $0 \le \alpha_i \le C$ and $\sum_{i=1}^n \alpha_i y_i = 0$.
-
-```rust
-pub struct SVM {
-    kernel: Box<dyn Kernel>,
-    C: f64,
-    support_vectors: Option<Tensor>,
-    alpha: Option<Tensor>,
-    bias: f64,
-}
-
-impl SVM {
-    pub fn fit(&mut self, X: &Tensor, y: &Tensor) -> Result<()> {
-        let K = self.kernel.kernel_matrix(X);
-        let alpha = self.smo_solver(&K, y)?;
-        let mask = alpha.greater_than(1e-5);
-        self.support_vectors = Some(X.masked_select(&mask));
-        self.alpha = Some(alpha.masked_select(&mask));
-        Ok(())
-    }
-}
-```
-
-### A.13. FML-IR Level 2 (Structured Dialect) Specification
-
-L2 is the primary optimization hub. High-level operations are normalized into `linalg.generic` operations.
-
-#### A.13.1 Linalg Generic Op Definition
-A `linalg.generic` operation is defined by:
-1. **Indexing Maps:** Affine maps that define how inputs/outputs are accessed relative to the iteration space.
-2. **Iterator Types:** Mark loops as "parallel" or "reduction".
-3. **Region:** The scalar computation performed at each point in the iteration space.
-
-Example: Fused Matmul-ReLU in L2 IR
-```
-%res = linalg.generic {
-  indexing_maps = [affine_map<(d0, d1, d2) -> (d0, d2)>,
-                   affine_map<(d0, d1, d2) -> (d2, d1)>,
-                   affine_map<(d0, d1, d2) -> (d0, d1)>],
-  iterator_types = ["parallel", "parallel", "reduction"]
-} ins(%A, %B) outs(%C) {
-  ^bb0(%a: f32, %b: f32, %c: f32):
-    %prod = arith.mulf %a, %b : f32
-    %sum = arith.addf %c, %prod : f32
-    %relu = arith.maxf %sum, %zero : f32
-    linalg.yield %relu : f32
-}
-```
-
-
-### A.14. CUDA Occupancy Optimization
-
-Maximum occupancy is critical for latency hiding on NVIDIA GPUs. ferricML's CUDA backend uses an analytical model to calculate optimal block sizes:
-
-```rust
-impl CudaDevice {
-    pub fn compute_occupancy(&self, threads_per_block: i32, shared_mem: usize, registers_per_thread: i32) -> f32 {
-        let blocks_per_sm_threads = self.max_threads_per_sm / threads_per_block;
-        let blocks_per_sm_shared = if shared_mem > 0 { self.shared_memory_per_sm / shared_mem } else { i32::MAX as usize } as i32;
-        let blocks_per_sm_regs = if registers_per_thread > 0 { self.registers_per_sm / (threads_per_block * registers_per_thread) } else { i32::MAX };
-
-        let blocks_per_sm = blocks_per_sm_threads.min(blocks_per_sm_shared).min(blocks_per_sm_regs).max(1);
-        let active_warps = (blocks_per_sm * threads_per_block) / self.warp_size;
-        let max_warps = self.max_threads_per_sm / self.warp_size;
-
-        active_warps as f32 / max_warps as f32
-    }
-}
-```
-
-### A.15. Automatic Mixed Precision (AMP) and Loss Scaling
-
-To prevent gradient underflow in FP16/BF16 training, ferricML implements an automatic `GradScaler`.
-
-#### A.15.1 Scaling Algorithm
-1.  **Scale Loss:** Before the backward pass, multiply the loss by a large factor $S$ (e.g., $2^{16}$).
-2.  **Backprop:** Gradients are computed on the scaled loss.
-3.  **Unscale Gradients:** Before updating weights, divide gradients by $S$.
-4.  **Dynamic Update:** If any gradient contains `NaN` or `Inf`, skip the update and decrease $S$. Otherwise, periodically increase $S$.
-
-```rust
-pub struct GradScaler {
-    scale: f32,
-    growth_factor: f32,
-    backoff_factor: f32,
-    growth_interval: usize,
-}
-
-impl GradScaler {
-    pub fn scale(&self, loss: Tensor<f32>) -> Tensor<f32> {
-        loss.mul_scalar(self.scale).unwrap()
-    }
-
-    pub fn unscale_(&self, optimizer: &mut dyn Optimizer) {
-        for param in optimizer.parameters() {
-            if let Some(mut grad) = param.grad() {
-                grad.div_scalar_(self.scale);
-            }
-        }
-    }
-}
-```
-
-### A.16. Distributed Data Parallel (DDP) Initialization
-
-ferricML utilizes a hierarchical rendezvous system for multi-node training:
-
-```rust
-pub struct ProcessGroup {
-    rank: usize,
-    world_size: usize,
-    backend: Arc<dyn CommunicationBackend>,
-}
-
-impl ProcessGroup {
-    pub fn new_nccl(rank: usize, world_size: usize, master_addr: &str) -> Result<Self> {
-        // 1. Initialize NCCL ID via TCP rendezvous
-        let nccl_id = tcp_rendezvous(master_addr, rank, world_size)?;
-        // 2. Initialize NCCL Communicator
-        let backend = NcclBackend::init(rank, world_size, nccl_id)?;
-        Ok(Self { rank, world_size, backend: Arc::new(backend) })
-    }
-}
-```
-
-
-### A.17. Quantization Formats & Lowering
-
-ferricML supports Post-Training Quantization (PTQ) and Quantization-Aware Training (QAT).
-
-#### A.17.1 Quantized DTypes
-Quantized types (`QInt8`, `QUInt8`) store a raw integer along with a `scale` and `zero_point`.
-$$x_{float} = (x_{quant} - zero\_point) \cdot scale$$
-
-```rust
-pub struct QuantizedTensor<T: DType> {
-    data: Tensor<T>,
-    scale: f32,
-    zero_point: i32,
-}
-```
-
-#### A.17.2 Integer Arithmetic Lowering
-The compiler lowers high-level `fml.matmul` on quantized tensors to target-specific integer instructions (e.g., `dp4a` on NVIDIA or `vpdotp` on ARM), ensuring that the final accumulation is performed in 32-bit precision before requantization.
-
-### A.18. Sparse Tensor Storage Formats
-
-For large, sparse datasets (common in recommender systems), ferricML provides optimized sparse formats.
-
-#### A.18.1 Compressed Sparse Row (CSR)
-Stores non-zero values in a contiguous array, with `col_indices` and `row_ptr` arrays for indexing.
-
-```rust
-pub struct SparseCSR<T: DType> {
-    values: Vec<T>,
-    col_indices: Vec<usize>,
-    row_ptrs: Vec<usize>,
-    shape: (usize, usize),
-}
-
-impl<T: DType> SparseCSR<T> {
-    pub fn get(&self, row: usize, col: usize) -> T {
-        let start = self.row_ptrs[row];
-        let end = self.row_ptrs[row + 1];
-        match self.col_indices[start..end].binary_search(&col) {
-            Ok(idx) => self.values[start + idx],
-            Err(_) => T::ZERO,
-        }
-    }
-}
-```
-
-#### A.18.2 Coordinate (COO) Format
-A simple list of (row, col, value) tuples, primarily used for building sparse matrices before conversion to CSR/CSC.
-
-### A.19. Compiler Dialect Conversion (L2 to L3)
-
-The "Bufferization" pass converts L2 (Linalg on Tensors) to L3 (Target MemRefs). This is a critical transition from value semantics to memory semantics.
-
-#### A.19.1 In-place Bufferization Rules
-1.  **Read-Only Tensors:** Allocated in constant memory or passed by reference.
-2.  **Overwrite Tensors:** If an operation's output shape matches an input shape and that input is not used subsequently (as determined by liveness analysis), the input buffer is reused.
-3.  **Allocations:** If no reuse is possible, a new buffer is requested from the `MemoryPoolAllocator`.
-
-Example: Bufferized Add in L3 IR
-```
-// L2: %3 = linalg.add ins(%0, %1) outs(%2)
-// L3:
-%mem0 = memref.alloc() : memref<128xf32>
-gpu.launch blocks(8,1,1) threads(16,1,1) args(%in0, %in1, %mem0) {
-  ^bb0(%a: f32, %b: f32, %out: f32):
-    %res = arith.addf %a, %b : f32
-    memref.store %res, %out : memref<128xf32>
-}
-```
+## Appendix R - Revision History
+| Version | Date | Author | Changes |
+|---|---|---|---|
+| 0.0.01  | 2025-11-20 | Jules | Comprehensive integration of all 10 technical sections into a unified document. |
