@@ -1,0 +1,10 @@
+[package]
+name = "ferric-nn"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ferric-core = { path = "../ferric-core" }
+ferric-autograd = { path = "../ferric-autograd" }
+ferric-backend-cpu = { path = "../ferric-backend-cpu" }
+serde.workspace = true

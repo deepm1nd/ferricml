@@ -1,0 +1,11 @@
+[package]
+name = "ferric-pgm"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ferric-core = { path = "../ferric-core" }
+petgraph.workspace = true
+ndarray.workspace = true
+rand.workspace = true
+serde.workspace = true
