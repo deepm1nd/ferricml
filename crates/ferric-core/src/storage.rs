@@ -5,14 +5,14 @@ pub enum Storage {
 }
 
 pub struct CpuStorage {
-    pub(crate) data: Vec<u8>,
-    pub(crate) len: usize,
+    pub data: Vec<u8>,
+    pub len: usize,
 }
 
 impl CpuStorage {
-    pub fn from_vec<T: bytemuck::Pod>(data: Vec<T>) -> Self {
+    pub fn from_vec<T: bytemuck::NoUninit + bytemuck::AnyBitPattern>(data: Vec<T>) -> Self {
         let len = data.len() * std::mem::size_of::<T>();
-        let data = bytemuck::allocation::cast_vec(data);
+        let data = bytemuck::pod_collect_to_vec(&data);
         Self { data, len }
     }
 

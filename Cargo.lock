@@ -182,6 +182,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "ferric-validation"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "ferricml",
+ "serde_json",
+]
+
+[[package]]
 name = "ferricml"
 version = "0.1.0"
 dependencies = [
