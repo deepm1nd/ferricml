@@ -77,6 +77,7 @@ For detailed setup instructions, see the [Getting Started Guide](docs/GETTING_ST
 
 - [User Guide](USER_GUIDE.md) - Step-by-step walkthrough.
 - [Architecture Deep Dive](docs/ARCHITECTURE.md) - Understanding the RMLC compiler.
+- [Validation & Parity](docs/VALIDATION.md) - Numerical equivalence results.
 - [API Reference](https://docs.rs/ferricml) - Comprehensive crate documentation.
 - [Examples & Tutorials](examples/) - End-to-end model implementations.
 

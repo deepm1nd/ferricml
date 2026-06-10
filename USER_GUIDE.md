@@ -88,3 +88,4 @@ Deploy to serverless environments (AWS Lambda, Google Cloud Functions) with mini
 - [Tutorials](docs/TUTORIALS.md)
 - [Mathematics of FerricML](docs/MATHEMATICS.md)
 - [Serialization Guide](docs/SERIALIZATION.md)
+- [Validation & Parity](docs/VALIDATION.md)
