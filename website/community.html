@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community | FerricML</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <span>FerricML</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="docs/index.html">Docs</a></li>
+                <li><a href="tutorials/index.html">Tutorials</a></li>
+                <li><a href="features.html">Features</a></li>
+                <li><a href="community.html" class="active">Community</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container" style="text-align: center; padding: 6rem 0;">
+        <h1 style="font-size: 3.5rem; margin-bottom: 2rem;">Join the <span class="highlight">Evolution</span></h1>
+        <p class="tagline">FerricML is a community-driven project. Help us build the future of Rust-native AI.</p>
+
+        <div class="social-grid">
+            <a href="https://github.com/deepm1nd/ferricml" class="social-card">
+                <i class="fab fa-github"></i>
+                <h3>GitHub</h3>
+                <p>Contribute to the core engine, add backends, or fix bugs.</p>
+            </a>
+            <a href="#" class="social-card">
+                <i class="fab fa-discord"></i>
+                <h3>Discord</h3>
+                <p>Chat with developers and get help with your models.</p>
+            </a>
+            <a href="#" class="social-card">
+                <i class="fab fa-twitter"></i>
+                <h3>Twitter</h3>
+                <p>Stay updated with the latest releases and news.</p>
+            </a>
+        </div>
+    </div>
+
+    <style>
+        .social-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; margin-top: 4rem; }
+        .social-card { padding: 3rem; border: 1px solid var(--border); border-radius: 12px; text-decoration: none; color: inherit; transition: transform 0.2s; }
+        .social-card:hover { transform: translateY(-10px); border-color: var(--primary); }
+        .social-card i { font-size: 3rem; color: var(--primary); margin-bottom: 1.5rem; }
+        @media (max-width: 768px) { .social-grid { grid-template-columns: 1fr; } }
+    </style>
+</body>
+</html>

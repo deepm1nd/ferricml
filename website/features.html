@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features | FerricML</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <span>FerricML</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="docs/index.html">Docs</a></li>
+                <li><a href="tutorials/index.html">Tutorials</a></li>
+                <li><a href="features.html" class="active">Features</a></li>
+                <li><a href="community.html">Community</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container" style="padding: 4rem 0;">
+        <h1 style="font-size: 3.5rem; text-align: center; margin-bottom: 4rem;">Built for the <span class="highlight">Modern ML Lifecycle</span></h1>
+
+        <div class="feature-detail">
+            <div class="feature-item">
+                <h2><i class="fas fa-microchip"></i> Unified Language Stack</h2>
+                <p>Say goodbye to the Python-C++ gap. FerricML is written entirely in Rust, from the high-level API down to the hardware kernels. Debug, profile, and optimize your entire stack in a single language.</p>
+            </div>
+
+            <div class="feature-item">
+                <h2><i class="fas fa-project-diagram"></i> Ahead-of-Time Autograd</h2>
+                <p>Our AOT-AD engine symbolicly differentiates your models at compile-time. This eliminates runtime overhead and allows for global graph optimizations that dynamic frameworks simply can't match.</p>
+            </div>
+
+            <div class="feature-item">
+                <h2><i class="fas fa-shield-virus"></i> Memory & Shape Safety</h2>
+                <p>Leverage Rust's ownership model to eliminate memory leaks and data races. Our unique ShapeGuards prevent dimension mismatches before you even run your code.</p>
+            </div>
+
+            <div class="feature-item">
+                <h2><i class="fas fa-box-open"></i> GGUF & SafeTensors Native</h2>
+                <p>Deploy with confidence using production-ready formats. We provide first-class support for GGUF (v3) and SafeTensors, ensuring your models are portable and secure.</p>
+            </div>
+
+            <div class="feature-item">
+                <h2><i class="fab fa-chrome"></i> WebAssembly Ready</h2>
+                <p>Run your models in the browser with near-native speed. FerricML's lightweight runtime makes it the perfect choice for client-side AI.</p>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .feature-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; }
+        .feature-item h2 { margin-bottom: 1rem; color: var(--text); display: flex; align-items: center; }
+        .feature-item i, .feature-item fab { margin-right: 15px; color: var(--primary); }
+        .feature-item p { color: var(--text-light); font-size: 1.1rem; }
+        @media (max-width: 768px) { .feature-detail { grid-template-columns: 1fr; } }
+    </style>
+</body>
+</html>

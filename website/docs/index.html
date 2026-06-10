@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation | FerricML</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .docs-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 4rem;
+            padding: 4rem 0;
+        }
+        .sidebar h4 { margin-bottom: 1rem; }
+        .sidebar ul { list-style: none; margin-bottom: 2rem; }
+        .sidebar li { margin-bottom: 0.5rem; }
+        .sidebar a { text-decoration: none; color: var(--text-light); }
+        .sidebar a.active { color: var(--primary); font-weight: 600; }
+        .content h1 { margin-bottom: 2rem; font-size: 2.5rem; }
+        .content h2 { margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        .content p { margin-bottom: 1rem; }
+        pre { background: #f6f8fa; padding: 1rem; border-radius: 6px; overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid var(--border); }
+        code { font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="logo">
+                <img src="../img/logo.png" alt="FerricML Logo" onerror="this.src='https://raw.githubusercontent.com/deepm1nd/ferricml/main/docs/sources/claude/logo-placeholder.png'">
+                <span>FerricML</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Docs</a></li>
+                <li><a href="../tutorials/index.html">Tutorials</a></li>
+                <li><a href="../features.html">Features</a></li>
+                <li><a href="../community.html">Community</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container docs-container">
+        <aside class="sidebar">
+            <h4>Getting Started</h4>
+            <ul>
+                <li><a href="getting-started.html">Introduction</a></li>
+                <li><a href="getting-started.html#install">Installation</a></li>
+            </ul>
+            <h4>Guides</h4>
+            <ul>
+                <li><a href="#" class="active">Tensor API</a></li>
+                <li><a href="#">Autograd (AOT-AD)</a></li>
+                <li><a href="#">Neural Networks</a></li>
+                <li><a href="#">Serialization</a></li>
+            </ul>
+            <h4>Advanced</h4>
+            <ul>
+                <li><a href="#">Compiler Architecture</a></li>
+                <li><a href="#">Custom Backends</a></li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <h1>Tensor API</h1>
+            <p>Tensors are the multi-dimensional arrays that form the backbone of FerricML. They support efficient mathematical operations on CPUs and GPUs.</p>
+
+            <h2>Creating Tensors</h2>
+            <p>You can create tensors from raw data or using factory methods:</p>
+            <pre><code>use ferricml::prelude::*;
+
+// From a slice
+let x = Tensor::from_slice(&[1.0, 2.0, 3.0, 4.0]);
+
+// Special factories
+let zeros = Tensor::zeros(&[3, 3]);
+let rand = Tensor::randn(&[5, 5]);</code></pre>
+
+            <h2>Basic Operations</h2>
+            <p>FerricML supports standard arithmetic with broadcasting support:</p>
+            <pre><code>let a = Tensor::ones(&[2, 2]);
+let b = Tensor::ones(&[2, 2]);
+let c = &a + &b; // Element-wise addition</code></pre>
+
+            <h2>Device Management</h2>
+            <p>Move tensors between hardware backends seamlessly:</p>
+            <pre><code>let x_cpu = Tensor::randn(&[100, 100]);
+let x_gpu = x_cpu.to_device(Device::Cuda(0));</code></pre>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2024 FerricML Project.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,32 +1,38 @@
 # FerricML User Guide
 
-FerricML is a universal machine learning framework implemented natively in Rust. This guide provides a step-by-step walkthrough for building, training, and exporting an AI model to GGUF format.
+This guide provides a comprehensive walkthrough for building, training, and deploying machine learning models with FerricML.
 
-## 1. Installation
+## 1. Introduction
 
-Add FerricML to your `Cargo.toml`:
+FerricML is a 100% Rust-native machine learning platform. It is designed to be the "Rust way" of doing AI: fast, safe, and concurrent.
 
-```toml
-[dependencies]
-ferricml = { git = "https://github.com/deepm1nd/ferricml" }
-```
+## 2. Core Concepts
 
-## 2. Building a Model
+### 2.1 Tensors
+The base unit of data. Tensors in FerricML are multi-dimensional arrays that can live on CPUs, GPUs (CUDA/ROCm), or TPUs.
+- [Read the Tensor API Guide](docs/TENSORS.md)
 
-Define your model using the `Module` trait and standard layers.
+### 2.2 Modules
+Models are built by composing `Modules`. A Module is a struct that implements the `Module` trait, defining a `forward` pass and a list of `parameters`.
+
+### 2.3 RMLC Compiler
+Behind the scenes, FerricML uses the RMLC compiler to optimize your model's execution. It uses Ahead-of-Time (AOT) Automatic Differentiation to generate extremely efficient gradient code.
+- [Deep Dive into Architecture](docs/ARCHITECTURE.md)
+
+## 3. Building Your First Model
 
 ```rust
 use ferricml::prelude::*;
+use ferricml::nn::{Linear, Module};
 
-struct MyModel {
+struct MyClassifier {
     layer1: Linear,
     layer2: Linear,
 }
 
-impl Module for MyModel {
+impl Module for MyClassifier {
     fn forward(&self, input: &Tensor) -> Tensor {
-        let x = self.layer1.forward(input);
-        let x = relu(&x);
+        let x = self.layer1.forward(input).relu();
         self.layer2.forward(&x)
     }
 
@@ -35,71 +41,50 @@ impl Module for MyModel {
         p.extend(self.layer2.parameters());
         p
     }
-
-    fn parameters_mut(&mut self) -> Vec<&mut Tensor> {
-        let mut p = self.layer1.parameters_mut();
-        p.extend(self.layer2.parameters_mut());
-        p
-    }
 }
 ```
 
-## 3. Training the Model
+## 4. Training Loop
 
-Set up your training loop with data, loss functions, and optimizers.
+A typical training loop in FerricML involves three main steps: forward, backward, and optimize.
 
 ```rust
-let mut model = MyModel {
-    layer1: Linear::new(784, 128),
-    layer2: Linear::new(128, 10),
-};
+let mut model = MyClassifier { ... };
+let mut optimizer = SGD::new(model.parameters(), 0.01);
 
-let optimizer = SGD { lr: 0.01 };
+for (batch_x, batch_y) in dataset {
+    // 1. Forward Pass
+    let output = model.forward(&batch_x);
+    let loss = output.mse_loss(&batch_y);
 
-for epoch in 0..10 {
-    for (x, y) in dataloader {
-        let output = model.forward(&x);
-        let loss = mse_loss(&output, &y);
+    // 2. Backward Pass (AOT-AD)
+    loss.backward();
 
-        // Compute gradients (Autograd)
-        // loss.backward();
-
-        // Update weights
-        // optimizer.step(model.parameters_mut());
-    }
+    // 3. Update Weights
+    optimizer.step();
 }
 ```
 
-## 4. Exporting to GGUF
+## 5. Advanced Features
 
-Export your trained model to the popular GGUF format for use in other inference engines.
+### 5.1 Multi-GPU / Distributed Training
+FerricML supports Data Parallel (DP) training out of the box using the `ferric-distributed` crate.
 
-```rust
-use ferricml::serialization::gguf::GGUFWriter;
-use std::fs::File;
+### 5.2 Quantization
+Reduce model size and increase inference speed with native 4-bit and 8-bit quantization support in GGUF.
 
-let file = File::create("model.gguf")?;
-let mut writer = GGUFWriter::new(file);
+## 6. Deployment
 
-let params = model.parameters();
-writer.write_header(params.len() as u32, 0)?;
+FerricML models are deployed as single, statically-linked binaries. No Python environment or heavy runtime required.
 
-let mut offset = 0;
-for (name, param) in named_params {
-    writer.write_tensor(name, param, offset)?;
-    offset += (param.shape().numel() * 4) as u64; // for f32
-}
+### 6.1 WebAssembly
+Compile your model to WASM to run directly in the browser with near-native performance.
 
-for param in params {
-    writer.write_tensor_data(param)?;
-}
-```
+### 6.2 Cloud Native
+Deploy to serverless environments (AWS Lambda, Google Cloud Functions) with minimal cold-start times.
 
-## 5. Other Formats
-
-FerricML also supports exporting to SafeTensors and custom binary checkpoints.
-
-```rust
-// Export to SafeTensors
-// ...
-```
+---
+## 📚 Additional Resources
+- [Tutorials](docs/TUTORIALS.md)
+- [Mathematics of FerricML](docs/MATHEMATICS.md)
+- [Serialization Guide](docs/SERIALIZATION.md)
