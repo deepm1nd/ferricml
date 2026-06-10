@@ -75,7 +75,10 @@ pub struct GGUFWriter<W: Write> {
 
 impl<W: Write> GGUFWriter<W> {
     pub fn new(writer: W) -> Self {
-        Self { writer, current_pos: 0 }
+        Self {
+            writer,
+            current_pos: 0,
+        }
     }
 
     pub fn write_all(&mut self, data: &[u8]) -> Result<()> {
@@ -107,7 +110,8 @@ impl<W: Write> GGUFWriter<W> {
 
         let ndim = tensor.shape().ndim() as u32;
         self.write_all(&ndim.to_le_bytes())?;
-        for &dim in tensor.shape().dims() {
+        // GGUF dimensions are written in reverse order (least significant first)
+        for &dim in tensor.shape().dims().iter().rev() {
             self.write_all(&(dim as u64).to_le_bytes())?;
         }
 

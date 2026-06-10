@@ -15,6 +15,12 @@ path = "src/models/resnet_ferric.rs"
 name = "export_gpt2_ferric"
 path = "src/models/export_gpt2_ferric.rs"
 [[bin]]
+name = "export_bert_ferric"
+path = "src/models/export_bert_ferric.rs"
+[[bin]]
+name = "export_llama_ferric"
+path = "src/models/export_llama_ferric.rs"
+[[bin]]
 name = "mobilenet_ferric"
 path = "src/models/mobilenet_ferric.rs"
 [[bin]]

@@ -10,24 +10,25 @@ fn main() -> anyhow::Result<()> {
     let block_size = 64;
     let n_ff = 128;
 
+    // Tensors in PyTorch shape
     let tensors = vec![
-        ("token_embd.weight", Tensor::zeros(vec![n_embd, vocab_size], TypeId::Float32)), // Reverse order for GGUF/llama.cpp
-        ("position_embd.weight", Tensor::zeros(vec![n_embd, block_size], TypeId::Float32)),
+        ("token_embd.weight", Tensor::zeros(vec![vocab_size, n_embd], TypeId::Float32)),
+        ("position_embd.weight", Tensor::zeros(vec![block_size, n_embd], TypeId::Float32)),
         ("blk.0.attn_norm.weight", Tensor::new(vec![1.0f32; n_embd], vec![n_embd])),
         ("blk.0.attn_norm.bias", Tensor::zeros(vec![n_embd], TypeId::Float32)),
-        ("blk.0.attn_qkv.weight", Tensor::zeros(vec![n_embd, 3 * n_embd], TypeId::Float32)),
+        ("blk.0.attn_qkv.weight", Tensor::zeros(vec![3 * n_embd, n_embd], TypeId::Float32)),
         ("blk.0.attn_qkv.bias", Tensor::zeros(vec![3 * n_embd], TypeId::Float32)),
         ("blk.0.attn_output.weight", Tensor::zeros(vec![n_embd, n_embd], TypeId::Float32)),
         ("blk.0.attn_output.bias", Tensor::zeros(vec![n_embd], TypeId::Float32)),
         ("blk.0.ffn_norm.weight", Tensor::new(vec![1.0f32; n_embd], vec![n_embd])),
         ("blk.0.ffn_norm.bias", Tensor::zeros(vec![n_embd], TypeId::Float32)),
-        ("blk.0.ffn_up.weight", Tensor::zeros(vec![n_embd, n_ff], TypeId::Float32)),
+        ("blk.0.ffn_up.weight", Tensor::zeros(vec![n_ff, n_embd], TypeId::Float32)),
         ("blk.0.ffn_up.bias", Tensor::zeros(vec![n_ff], TypeId::Float32)),
-        ("blk.0.ffn_down.weight", Tensor::zeros(vec![n_ff, n_embd], TypeId::Float32)),
+        ("blk.0.ffn_down.weight", Tensor::zeros(vec![n_embd, n_ff], TypeId::Float32)),
         ("blk.0.ffn_down.bias", Tensor::zeros(vec![n_embd], TypeId::Float32)),
         ("output_norm.weight", Tensor::new(vec![1.0f32; n_embd], vec![n_embd])),
         ("output_norm.bias", Tensor::zeros(vec![n_embd], TypeId::Float32)),
-        ("output.weight", Tensor::zeros(vec![n_embd, vocab_size], TypeId::Float32)),
+        ("output.weight", Tensor::zeros(vec![vocab_size, n_embd], TypeId::Float32)),
     ];
 
     let file = File::create("validation/gguf/tiny_gpt2_ferric.gguf")?;
