@@ -1,9 +1,7 @@
-127.0.0.1 - - [11/Jun/2026 04:24:12] "GET /index.html HTTP/1.1" 200 -
-127.0.0.1 - - [11/Jun/2026 04:24:12] "GET /js/main.js HTTP/1.1" 200 -
-127.0.0.1 - - [11/Jun/2026 04:24:12] "GET /css/style.css HTTP/1.1" 200 -
-127.0.0.1 - - [11/Jun/2026 04:24:12] "GET /img/logo_main_lockup.png HTTP/1.1" 200 -
-127.0.0.1 - - [11/Jun/2026 04:24:13] "GET /img/hero_banner.png HTTP/1.1" 200 -
-127.0.0.1 - - [11/Jun/2026 04:24:13] "GET /features.html HTTP/1.1" 200 -
-127.0.0.1 - - [11/Jun/2026 04:24:13] "GET /img/mascot_library.png HTTP/1.1" 200 -
-127.0.0.1 - - [11/Jun/2026 04:24:14] "GET /community.html HTTP/1.1" 200 -
-127.0.0.1 - - [11/Jun/2026 04:24:14] "GET /img/twitter_header.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 05:11:14] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 05:11:14] "GET /website/js/main.js HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 05:11:14] "GET /website/img/logo_main_lockup.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 05:11:14] "GET /website/css/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 05:11:14] "GET /website/img/hero_banner.png HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 05:11:15] "GET /website/features.html HTTP/1.1" 200 -
+127.0.0.1 - - [11/Jun/2026 05:11:15] "GET /website/img/mascot_library.png HTTP/1.1" 200 -
