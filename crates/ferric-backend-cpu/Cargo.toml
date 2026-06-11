@@ -1,0 +1,9 @@
+[package]
+name = "ferric-backend-cpu"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ferric-core = { path = "../ferric-core" }
+rayon.workspace = true
+num-traits.workspace = true

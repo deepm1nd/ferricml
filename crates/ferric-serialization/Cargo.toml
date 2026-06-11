@@ -1,0 +1,14 @@
+[package]
+name = "ferric-serialization"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ferric-core = { path = "../ferric-core" }
+ferric-nn = { path = "../ferric-nn" }
+serde.workspace = true
+serde_json.workspace = true
+bincode.workspace = true
+safetensors.workspace = true
+# gguf-rs.workspace = true # might need a different one if gguf-rs doesn't exist
+# We will use our own implementation if needed or find a suitable one.

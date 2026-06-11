@@ -1,0 +1,12 @@
+[package]
+name = "ferricml"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ferric-core = { path = "../ferric-core" }
+ferric-ir = { path = "../ferric-ir" }
+ferric-autograd = { path = "../ferric-autograd" }
+ferric-backend-cpu = { path = "../ferric-backend-cpu" }
+ferric-nn = { path = "../ferric-nn" }
+ferric-serialization = { path = "../ferric-serialization" }
