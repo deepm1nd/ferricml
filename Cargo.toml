@@ -12,6 +12,9 @@ members = [
     "crates/ferric-serialization",
     "crates/ferricml",
     "validation",
+    "examples/linear_regression",
+    "examples/mnist_tutorial",
+    "examples/train_and_export",
 ]
 
 [workspace.dependencies]

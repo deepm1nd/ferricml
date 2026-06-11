@@ -1,0 +1,12 @@
+[package]
+name = "example-train-and-export"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+ferricml = { path = "../../crates/ferricml" }
+ferric-core = { path = "../../crates/ferric-core" }
+ferric-nn = { path = "../../crates/ferric-nn" }
+ferric-serialization = { path = "../../crates/ferric-serialization" }
+anyhow = "1.0"
