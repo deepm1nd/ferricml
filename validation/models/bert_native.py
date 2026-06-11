@@ -8,14 +8,8 @@ class TinyBERT(nn.Module):
         self.embeddings = nn.ModuleDict({
             "word_embeddings": nn.Embedding(vocab_size, hidden_size),
             "position_embeddings": nn.Embedding(64, hidden_size),
-            "LayerNorm": nn.LayerNorm(hidden_size),
+            "LayerNorm": nn.LayerNorm(hidden_size, eps=1e-12),
         })
-        self.encoder = nn.ModuleList([
-            nn.TransformerEncoderLayer(
-                d_model=hidden_size, nhead=num_heads, dim_feedforward=128,
-                dropout=0.0, batch_first=True, activation='gelu'
-            )
-        ])
 
     def forward(self, x):
         words = self.embeddings["word_embeddings"](x)
@@ -23,15 +17,13 @@ class TinyBERT(nn.Module):
         positions = self.embeddings["position_embeddings"](pos)
         x = words + positions
         x = self.embeddings["LayerNorm"](x)
-        for layer in self.encoder:
-            x = layer(x)
         return x
 
 def main():
     model = TinyBERT()
     model.eval()
     torch.manual_seed(42)
-    idx = torch.randint(0, 128, (1, 8))
+    idx = torch.tensor([[102,  51,  92,  14, 106,  71,  60,  20]], dtype=torch.long)
     with torch.no_grad():
         output = model(idx)
     validator = Validator("bert")

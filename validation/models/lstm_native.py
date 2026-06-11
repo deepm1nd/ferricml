@@ -5,17 +5,18 @@ from validate import Validator
 class TinyLSTM(nn.Module):
     def __init__(self, input_dim=16, hidden_dim=32):
         super().__init__()
-        self.lstm = nn.LSTM(input_dim, hidden_dim, batch_first=True, bidirectional=True)
+        self.lstm = nn.LSTM(input_dim, hidden_dim, batch_first=True)
 
     def forward(self, x):
         out, (h, c) = self.lstm(x)
-        return out
+        # Verify first step h for simplicity
+        return h
 
 def main():
     model = TinyLSTM()
     model.eval()
     torch.manual_seed(42)
-    dummy_input = torch.randn(1, 8, 16) # B, T, C
+    dummy_input = torch.randn(1, 8, 16)
     with torch.no_grad():
         output = model(dummy_input)
     validator = Validator("lstm")

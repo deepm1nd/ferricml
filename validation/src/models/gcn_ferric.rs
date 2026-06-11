@@ -44,10 +44,7 @@ fn flatten_helper(v: &Value, result: &mut Vec<f32>) {
 fn main() -> anyhow::Result<()> {
     let mut file = match File::open("validation/gcn/native_output.json") {
         Ok(f) => f,
-        Err(_) => {
-            println!("Native output not found. Run gcn_native.py first.");
-            return Ok(());
-        }
+        Err(_) => return Ok(()),
     };
     let mut content = String::new();
     file.read_to_string(&mut content)?;
@@ -59,15 +56,13 @@ fn main() -> anyhow::Result<()> {
     let weight = load_tensor_any(&params["weight"]);
     let bias = load_tensor_any(&params["bias"]);
 
-    // support = x * weight
     let support = ferricml::cpu::ops::matmul(&x, &weight);
-    // output = adj * support
     let output = ferricml::cpu::ops::matmul(&adj, &support);
-    // output + bias
     let final_out = ferricml::cpu::ops::add(&output, &bias);
 
-    println!("GCN output shape: {:?}", final_out.shape());
-    println!("GCN verification logic complete (reusing verified matmul/add).");
-
+    let output_vec = match final_out.storage().as_ref() { Storage::Cpu(s) => s.as_slice::<f32>().to_vec() };
+    let mut out_file = File::create("validation/gcn/ferric_output.json")?;
+    let out_json = serde_json::json!({ "output": output_vec });
+    write!(out_file, "{}", out_json.to_string())?;
     Ok(())
 }

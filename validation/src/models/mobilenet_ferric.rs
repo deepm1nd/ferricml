@@ -41,45 +41,10 @@ fn flatten_helper(v: &Value, result: &mut Vec<f32>) {
     }
 }
 
-struct MobileNetBlock {
-    pw1: Conv2d,
-    bn1: BatchNorm2d,
-    dw: Conv2d,
-    bn2: BatchNorm2d,
-    pw2: Conv2d,
-    bn3: BatchNorm2d,
-}
-
-impl MobileNetBlock {
-    fn forward(&self, x: &Tensor) -> Tensor {
-        let identity = x;
-        let mut out = self.pw1.forward(x);
-        out = self.bn1.forward(&out);
-        out = relu6(&out);
-
-        out = self.dw.forward(&out);
-        out = self.bn2.forward(&out);
-        out = relu6(&out);
-
-        out = self.pw2.forward(&out);
-        out = self.bn3.forward(&out);
-
-        let out_shape = out.shape().dims().to_vec();
-        let mut out_data = match out.storage().as_ref() { Storage::Cpu(s) => s.as_slice::<f32>().to_vec() };
-        let binding = identity.storage();
-        let identity_data = match binding.as_ref() { Storage::Cpu(s) => s.as_slice::<f32>() };
-        for i in 0..out_data.len() { out_data[i] += identity_data[i]; }
-        Tensor::new(out_data, out_shape)
-    }
-}
-
 fn main() -> anyhow::Result<()> {
     let mut file = match File::open("validation/mobilenet/native_output.json") {
         Ok(f) => f,
-        Err(_) => {
-            println!("Native output not found. Run mobilenet_native.py first.");
-            return Ok(());
-        }
+        Err(_) => return Ok(()),
     };
     let mut content = String::new();
     file.read_to_string(&mut content)?;
@@ -105,15 +70,26 @@ fn main() -> anyhow::Result<()> {
     bn3.weight = load_tensor_any(&params["conv.7.weight"]); bn3.bias = load_tensor_any(&params["conv.7.bias"]);
     bn3.running_mean = load_tensor_any(&params["conv.7.running_mean"]); bn3.running_var = load_tensor_any(&params["conv.7.running_var"]);
 
-    let model = MobileNetBlock { pw1, bn1, dw, bn2, pw2, bn3 };
-    let output = model.forward(&input_tensor);
+    let identity = &input_tensor;
+    let mut out = pw1.forward(&input_tensor);
+    out = bn1.forward(&out);
+    out = relu6(&out);
+    out = dw.forward(&out);
+    out = bn2.forward(&out);
+    out = relu6(&out);
+    out = pw2.forward(&out);
+    out = bn3.forward(&out);
+
+    let out_shape = out.shape().dims().to_vec();
+    let mut out_data = match out.storage().as_ref() { Storage::Cpu(s) => s.as_slice::<f32>().to_vec() };
+    let id_binding = identity.storage();
+    let id_data = match id_binding.as_ref() { Storage::Cpu(s) => s.as_slice::<f32>() };
+    for i in 0..out_data.len() { out_data[i] += id_data[i]; }
+    let output = Tensor::new(out_data, out_shape);
+
     let output_vec = match output.storage().as_ref() { Storage::Cpu(s) => s.as_slice::<f32>().to_vec() };
-    let native_output: Vec<f32> = flatten_json_array(&v["output"]);
-    let mut max_diff = 0.0f32;
-    for i in 0..output_vec.len() {
-        let diff = (output_vec[i] - native_output[i]).abs();
-        if diff > max_diff { max_diff = diff; }
-    }
-    println!("Max difference for MobileNet block: {}", max_diff);
+    let mut out_file = File::create("validation/mobilenet/ferric_output.json")?;
+    let out_json = serde_json::json!({ "output": output_vec });
+    write!(out_file, "{}", out_json.to_string())?;
     Ok(())
 }

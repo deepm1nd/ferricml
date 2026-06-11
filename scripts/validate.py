@@ -47,3 +47,27 @@ class Validator:
             "mean_diff": float(mean_diff),
             "passed": bool(max_diff < tolerance)
         }
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", type=str, required=True)
+    parser.add_argument("--native_path", type=str, required=True)
+    parser.add_argument("--ferric_path", type=str, required=True)
+    args = parser.parse_args()
+
+    with open(args.native_path, 'r') as f:
+        native_data = json.load(f)
+    with open(args.ferric_path, 'r') as f:
+        ferric_data = json.load(f)
+
+    native_out = np.array(native_data["output"]).flatten()
+    ferric_out = np.array(ferric_data["output"]).flatten()
+
+    diff = np.abs(native_out - ferric_out)
+    max_diff = np.max(diff)
+    mae = np.mean(diff)
+
+    print(f"RESULTS_START:{args.model}")
+    print(f"MAE: {mae:.12f}")
+    print(f"MAX_DIFF: {max_diff:.12f}")
+    print(f"RESULTS_END:{args.model}")

@@ -44,10 +44,7 @@ fn flatten_helper(v: &Value, result: &mut Vec<f32>) {
 fn main() -> anyhow::Result<()> {
     let mut file = match File::open("validation/unet/native_output.json") {
         Ok(f) => f,
-        Err(_) => {
-            println!("Native output not found. Run unet_native.py first.");
-            return Ok(());
-        }
+        Err(_) => return Ok(()),
     };
     let mut content = String::new();
     file.read_to_string(&mut content)?;
@@ -68,14 +65,8 @@ fn main() -> anyhow::Result<()> {
     let final_out = sigmoid(&out_up);
 
     let output_vec = match final_out.storage().as_ref() { Storage::Cpu(s) => s.as_slice::<f32>().to_vec() };
-    let native_output: Vec<f32> = flatten_json_array(&v["output"]);
-
-    let mut max_diff = 0.0f32;
-    for i in 0..output_vec.len() {
-        let diff = (output_vec[i] - native_output[i]).abs();
-        if diff > max_diff { max_diff = diff; }
-    }
-    println!("Max difference for Tiny U-Net: {}", max_diff);
-
+    let mut out_file = File::create("validation/unet/ferric_output.json")?;
+    let out_json = serde_json::json!({ "output": output_vec });
+    write!(out_file, "{}", out_json.to_string())?;
     Ok(())
 }

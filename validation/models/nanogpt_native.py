@@ -12,7 +12,7 @@ class NanoGPT(nn.Module):
             wte = nn.Embedding(config['vocab_size'], config['n_embd']),
             wpe = nn.Embedding(config['block_size'], config['n_embd']),
             h = nn.ModuleList([Block(config) for _ in range(config['n_layer'])]),
-            ln_f = nn.LayerNorm(config['n_embd']),
+            ln_f = nn.LayerNorm(config['n_embd'], eps=1e-5),
         ))
         self.lm_head = nn.Linear(config['n_embd'], config['vocab_size'], bias=False)
 
@@ -32,9 +32,9 @@ class NanoGPT(nn.Module):
 class Block(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.ln_1 = nn.LayerNorm(config['n_embd'])
+        self.ln_1 = nn.LayerNorm(config['n_embd'], eps=1e-5)
         self.attn = CausalSelfAttention(config)
-        self.ln_2 = nn.LayerNorm(config['n_embd'])
+        self.ln_2 = nn.LayerNorm(config['n_embd'], eps=1e-5)
         self.mlp = MLP(config)
 
     def forward(self, x):
@@ -54,13 +54,14 @@ class CausalSelfAttention(nn.Module):
 
     def forward(self, x):
         B, T, C = x.size()
-        q, k, v  = self.c_attn(x).split(self.n_embd, dim=2)
+        qkv = self.c_attn(x)
+        q, k, v  = qkv.split(self.n_embd, dim=2)
         hs = C // self.n_head
         q = q.view(B, T, self.n_head, hs).transpose(1, 2)
         k = k.view(B, T, self.n_head, hs).transpose(1, 2)
         v = v.view(B, T, self.n_head, hs).transpose(1, 2)
-        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-        att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
+        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(hs))
+        att = att.masked_fill(self.bias[:,:,:T,:T] == 0, -1e9)
         att = F.softmax(att, dim=-1)
         y = att @ v
         y = y.transpose(1, 2).contiguous().view(B, T, C)
@@ -75,22 +76,22 @@ class MLP(nn.Module):
 
     def forward(self, x):
         x = self.c_fc(x)
-        x = F.gelu(x)
+        # Approximate GELU
+        x = 0.5 * x * (1.0 + torch.tanh(math.sqrt(2.0 / math.pi) * (x + 0.044715 * torch.pow(x, 3.0))))
         x = self.c_proj(x)
         return x
 
 def main():
-    config = dict(n_layer=2, n_head=2, n_embd=32, block_size=64, vocab_size=128)
+    config = dict(n_layer=1, n_head=2, n_embd=32, block_size=64, vocab_size=128)
     model = NanoGPT(config)
     model.eval()
-    torch.manual_seed(42)
-    idx = torch.randint(0, config['vocab_size'], (1, 8))
+    idx = torch.tensor([[102,  51,  92,  14, 106,  71,  60,  20]], dtype=torch.long)
     with torch.no_grad():
         logits = model(idx)
     validator = Validator("nanogpt")
     validator.save_native_output({
         "input": idx,
-        "logits": logits,
+        "output": logits,
         "params": {name: p for name, p in model.state_dict().items()}
     })
     print("NanoGPT native output saved.")

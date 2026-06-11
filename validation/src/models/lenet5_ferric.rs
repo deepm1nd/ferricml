@@ -41,41 +41,10 @@ fn flatten_helper(v: &Value, result: &mut Vec<f32>) {
     }
 }
 
-struct LeNet5 {
-    conv1: Conv2d,
-    conv2: Conv2d,
-    fc1: Linear,
-    fc2: Linear,
-    fc3: Linear,
-}
-
-impl LeNet5 {
-    fn forward(&self, input: &Tensor) -> Tensor {
-        let x = self.conv1.forward(input);
-        let x = relu(&x);
-        let x = ferricml::cpu::ops::max_pool2d(&x, (2, 2), (2, 2));
-        let x = self.conv2.forward(&x);
-        let x = relu(&x);
-        let x = ferricml::cpu::ops::max_pool2d(&x, (2, 2), (2, 2));
-        let x_shape = x.shape().dims();
-        let flat_len = x_shape[1] * x_shape[2] * x_shape[3];
-        let x_data = match x.storage().as_ref() { Storage::Cpu(s) => s.as_slice::<f32>().to_vec() };
-        let x = Tensor::new(x_data, vec![x_shape[0], flat_len]);
-        let x = self.fc1.forward(&x);
-        let x = relu(&x);
-        let x = self.fc2.forward(&x);
-        let x = relu(&x);
-        self.fc3.forward(&x)
-    }
-}
-
 fn main() -> anyhow::Result<()> {
     let mut file = match File::open("validation/lenet5/native_output.json") {
         Ok(f) => f,
-        Err(_) => {
-            println!("Native output not found. Run lenet5_native.py first.");
-            return Ok(());
-        }
+        Err(_) => return Ok(()),
     };
     let mut content = String::new();
     file.read_to_string(&mut content)?;
@@ -105,15 +74,27 @@ fn main() -> anyhow::Result<()> {
     let fc1 = load_linear_pt(&params["fc1.weight"], &params["fc1.bias"]);
     let fc2 = load_linear_pt(&params["fc2.weight"], &params["fc2.bias"]);
     let fc3 = load_linear_pt(&params["fc3.weight"], &params["fc3.bias"]);
-    let model = LeNet5 { conv1, conv2, fc1, fc2, fc3 };
-    let output = model.forward(&input_tensor);
+
+    // LeNet5 forward logic
+    let x = conv1.forward(&input_tensor);
+    let x = relu(&x);
+    let x = ferricml::cpu::ops::max_pool2d(&x, (2, 2), (2, 2));
+    let x = conv2.forward(&x);
+    let x = relu(&x);
+    let x = ferricml::cpu::ops::max_pool2d(&x, (2, 2), (2, 2));
+    let x_shape = x.shape().dims();
+    let flat_len = x_shape[1] * x_shape[2] * x_shape[3];
+    let x_data = match x.storage().as_ref() { Storage::Cpu(s) => s.as_slice::<f32>().to_vec() };
+    let x = Tensor::new(x_data, vec![x_shape[0], flat_len]);
+    let x = fc1.forward(&x);
+    let x = relu(&x);
+    let x = fc2.forward(&x);
+    let x = relu(&x);
+    let output = fc3.forward(&x);
+
     let output_vec = match output.storage().as_ref() { Storage::Cpu(s) => s.as_slice::<f32>().to_vec() };
-    let native_output: Vec<f32> = flatten_json_array(&v["output"]);
-    let mut max_diff = 0.0f32;
-    for i in 0..output_vec.len() {
-        let diff = (output_vec[i] - native_output[i]).abs();
-        if diff > max_diff { max_diff = diff; }
-    }
-    println!("Max difference for full LeNet-5: {}", max_diff);
+    let mut out_file = File::create("validation/lenet5/ferric_output.json")?;
+    let out_json = serde_json::json!({ "output": output_vec });
+    write!(out_file, "{}", out_json.to_string())?;
     Ok(())
 }

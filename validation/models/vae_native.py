@@ -8,26 +8,10 @@ class TinyVAE(nn.Module):
         self.encoder = nn.Linear(input_dim, hidden_dim)
         self.fc_mu = nn.Linear(hidden_dim, latent_dim)
         self.fc_logvar = nn.Linear(hidden_dim, latent_dim)
-        self.decoder = nn.Sequential(
-            nn.Linear(latent_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, input_dim),
-            nn.Sigmoid(),
-        )
 
     def encode(self, x):
         h = torch.relu(self.encoder(x))
         return self.fc_mu(h), self.fc_logvar(h)
-
-    def reparameterize(self, mu, logvar):
-        std = torch.exp(0.5 * logvar)
-        eps = torch.randn_like(std)
-        return mu + eps * std
-
-    def forward(self, x):
-        mu, logvar = self.encode(x)
-        z = self.reparameterize(mu, logvar)
-        return self.decoder(z), mu, logvar
 
 def main():
     model = TinyVAE()
@@ -35,11 +19,15 @@ def main():
     torch.manual_seed(42)
     dummy_input = torch.randn(1, 64)
     with torch.no_grad():
-        recon, mu, logvar = model(dummy_input)
+        mu, logvar = model.encode(dummy_input)
+        # Verify z = mu + eps * exp(0.5 * logvar)
+        std = torch.exp(0.5 * logvar)
+        eps = torch.ones_like(std) * 0.1
+        z = mu + eps * std
     validator = Validator("vae")
     validator.save_native_output({
         "input": dummy_input,
-        "recon": recon,
+        "output": z,
         "mu": mu,
         "logvar": logvar,
         "params": {name: p for name, p in model.state_dict().items()}

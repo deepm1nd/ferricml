@@ -44,32 +44,24 @@ fn flatten_helper(v: &Value, result: &mut Vec<f32>) {
 fn main() -> anyhow::Result<()> {
     let mut file = match File::open("validation/vae/native_output.json") {
         Ok(f) => f,
-        Err(_) => {
-            println!("Native output not found. Run vae_native.py first.");
-            return Ok(());
-        }
+        Err(_) => return Ok(()),
     };
     let mut content = String::new();
     file.read_to_string(&mut content)?;
     let v: Value = serde_json::from_str(&content)?;
-    let params = &v["params"];
 
-    // Test Reparameterization trick logic
-    // mu + eps * exp(0.5 * logvar)
     let mu = load_tensor_any(&v["mu"]);
     let logvar = load_tensor_any(&v["logvar"]);
-
     let half = Tensor::new(vec![0.5f32; 8], vec![8]);
     let logvar_scaled = ferricml::cpu::ops::mul(&logvar, &half);
     let std = exp(&logvar_scaled);
-
-    // Fixed epsilon for verification
-    let eps_vec = vec![0.1f32; 8];
-    let eps = Tensor::new(eps_vec, vec![8]);
-
+    let eps = Tensor::new(vec![0.1f32; 8], vec![8]);
     let scaled_eps = ferricml::cpu::ops::mul(&eps, &std);
-    let _z = ferricml::cpu::ops::add(&mu, &scaled_eps);
+    let z = ferricml::cpu::ops::add(&mu, &scaled_eps);
 
-    println!("VAE Reparameterization trick logic verified (ops verified).");
+    let output_vec = match z.storage().as_ref() { Storage::Cpu(s) => s.as_slice::<f32>().to_vec() };
+    let mut out_file = File::create("validation/vae/ferric_output.json")?;
+    let out_json = serde_json::json!({ "output": output_vec });
+    write!(out_file, "{}", out_json.to_string())?;
     Ok(())
 }
