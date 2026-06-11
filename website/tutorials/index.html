@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutorials | FerricML</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .tutorial-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; padding: 4rem 0; }
+        .tutorial-card { border: 1px solid var(--border); border-radius: 12px; padding: 2rem; transition: transform 0.2s; text-decoration: none; color: inherit; }
+        .tutorial-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .tag { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 1rem; }
+        .tag-beginner { background: #e6ffed; color: #22863a; }
+        .tag-intermediate { background: #fff8c5; color: #735c0f; }
+        .tutorial-card h3 { margin-bottom: 1rem; }
+        .tutorial-card p { color: var(--text-light); font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="../index.html" class="logo">
+                <span>FerricML</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="../docs/index.html">Docs</a></li>
+                <li><a href="index.html" class="active">Tutorials</a></li>
+                <li><a href="../features.html">Features</a></li>
+                <li><a href="../community.html">Community</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-top: 4rem; font-size: 3rem;">Tutorials</h1>
+        <p class="tagline" style="margin-left: 0;">Learn how to build and deploy state-of-the-art models with FerricML.</p>
+
+        <div class="tutorial-grid">
+            <a href="#" class="tutorial-card">
+                <span class="tag tag-beginner">Beginner</span>
+                <h3>Linear Regression</h3>
+                <p>The "Hello World" of Machine Learning. Learn the basics of gradients and optimizers.</p>
+            </a>
+            <a href="#" class="tutorial-card">
+                <span class="tag tag-intermediate">Intermediate</span>
+                <h3>MNIST Digit Classifier</h3>
+                <p>Build and train a Convolutional Neural Network from scratch to recognize handwritten digits.</p>
+            </a>
+            <a href="#" class="tutorial-card">
+                <span class="tag tag-intermediate">Intermediate</span>
+                <h3>GGUF Model Export</h3>
+                <p>Learn how to train in FerricML and export to GGUF for cross-platform inference.</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
