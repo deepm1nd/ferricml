@@ -1,0 +1,10 @@
+[package]
+name = "example-linear-regression"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+ferricml = { path = "../../crates/ferricml" }
+ferric-core = { path = "../../crates/ferric-core" }
+ferric-nn = { path = "../../crates/ferric-nn" }

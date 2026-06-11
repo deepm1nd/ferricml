@@ -6,11 +6,11 @@ fn main() -> anyhow::Result<()> {
     println!("Initializing FerricML...");
 
     // 1. Define a simple model
-    let mut model = Linear::new(10, 5);
+    let model = Linear::new(10, 5);
 
     // 2. Create some dummy data
-    let input = Tensor::new(vec![1.0f32; 10], vec![1, 10]);
-    let target = Tensor::new(vec![0.0f32; 5], vec![1, 5]);
+    let _input = Tensor::new(vec![1.0f32; 10], vec![1, 10]);
+    let _target = Tensor::new(vec![0.0f32; 5], vec![1, 5]);
 
     // 3. Simple training loop (placeholder)
     println!("Training model...");
