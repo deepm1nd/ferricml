@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FerricML | High-Performance Rust-Native Machine Learning</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="img/logo.png" alt="FerricML Logo" onerror="this.src='https://raw.githubusercontent.com/deepm1nd/ferricml/main/docs/sources/claude/logo-placeholder.png'">
+                <span>FerricML</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="docs/index.html">Docs</a></li>
+                <li><a href="tutorials/index.html">Tutorials</a></li>
+                <li><a href="features.html">Features</a></li>
+                <li><a href="community.html">Community</a></li>
+                <li><a href="https://github.com/deepm1nd/ferricml" class="github-link"><i class="fab fa-github"></i> GitHub</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1>Machine Learning. <span class="highlight">Native to Rust.</span></h1>
+            <p class="tagline">An end-to-end AI platform built for extreme performance, memory safety, and seamless heterogeneous compute.</p>
+            <div class="hero-btns">
+                <a href="docs/getting-started.html" class="btn btn-primary">Get Started</a>
+                <a href="#code-preview" class="btn btn-secondary">View Code</a>
+            </div>
+            <div class="install-snippet">
+                <code>cargo add ferricml</code>
+                <button class="copy-btn"><i class="far fa-copy"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <section id="code-preview" class="code-section">
+        <div class="container">
+            <div class="code-window">
+                <div class="window-header">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                    <span class="window-title">main.rs</span>
+                </div>
+                <div class="code-content">
+                    <pre><code><span class="keyword">use</span> ferricml::prelude::*;
+
+<span class="keyword">fn</span> <span class="function">main</span>() {
+    <span class="comment">// Pure Rust, AOT Autograd, Heterogeneous Compute</span>
+    <span class="keyword">let</span> model = MnistNet::new();
+    <span class="keyword">let</span> images = Tensor::randn(&[<span class="number">64</span>, <span class="number">1</span>, <span class="number">28</span>, <span class="number">28</span>]);
+
+    <span class="keyword">let</span> output = model.forward(&images);
+    <span class="keyword">let</span> loss = output.cross_entropy(&labels);
+
+    loss.backward(); <span class="comment">// Ahead-of-Time Gradients</span>
+    optimizer.step();
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pillars">
+        <div class="container">
+            <div class="pillar">
+                <i class="fas fa-bolt"></i>
+                <h3>Extreme Performance</h3>
+                <p>Leveraging RMLC (FerricML Compiler) and Multi-level IR dialects to squeeze every bit of power from your hardware.</p>
+            </div>
+            <div class="pillar">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Production Safety</h3>
+                <p>100% Rust memory safety combined with compile-time ShapeGuards ensures your models run reliably everywhere.</p>
+            </div>
+            <div class="pillar">
+                <i class="fas fa-microchip"></i>
+                <h3>Universal Compute</h3>
+                <p>Native support for CPU (LLVM), CUDA, ROCm, and TPU. Deploy from serverless to edge with a single binary.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>FerricML</h3>
+                    <p>The future of AI is written in Rust.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="docs/index.html">Documentation</a></li>
+                        <li><a href="tutorials/index.html">Tutorials</a></li>
+                        <li><a href="https://docs.rs/ferricml">API Reference</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://github.com/deepm1nd/ferricml">GitHub</a></li>
+                        <li><a href="community.html">Discord</a></li>
+                        <li><a href="community.html">Twitter</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 FerricML Project. Licensed under Apache 2.0.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
