@@ -1,10 +1,10 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/deepm1nd/ferricml/main/docs/sources/claude/logo-placeholder.png" alt="FerricML Logo" width="200">
+  <img src="https://raw.githubusercontent.com/deepm1nd/ferricml/website/img/hero_banner.png" alt="FerricML Logo" width="200">
   <h1>FerricML</h1>
   <p><strong>A High-Performance, End-to-End Machine Learning Platform Native to Rust.</strong></p>
 
   <p>
-    <a href="https://github.com/deepm1nd/ferricml/actions"><img src="https://github.com/deepm1nd/ferricml/workflows/CI/badge.svg" alt="CI"></a>
+    <a href="https://github.com/deepm1nd/ferricml/actions"><img src="https://github.com/deepm1nd/ferricml/website/img/app_icon_android.png" alt="CI"></a>
     <a href="https://crates.io/crates/ferricml"><img src="https://img.shields.io/crates/v/ferricml.svg" alt="Crates.io"></a>
     <a href="https://docs.rs/ferricml"><img src="https://docs.rs/ferricml/badge.svg" alt="Documentation"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License"></a>
