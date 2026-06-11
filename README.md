@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/deepm1nd/ferricml/main/docs/sources/claude/logo-placeholder.png" alt="FerricML Logo" width="200">
+  <img src="https://raw.githubusercontent.com/deepm1nd/ferricml/website/img/hero_banner.png" alt="FerricML Logo" width="200">
   <h1>FerricML</h1>
   <p><strong>A High-Performance, End-to-End Machine Learning Platform Native to Rust.</strong></p>
 
@@ -13,7 +13,7 @@
 
 ---
 
-FerricML is a universal machine learning framework implemented natively in Rust, designed for performance, memory safety, and seamless deployment across heterogeneous hardware backends (CPU, CUDA, ROCm, TPU).
+[FerricML](https://deepm1nd.github.io/ferricml) is a universal machine learning framework implemented natively in Rust, designed for performance, memory safety, and seamless deployment across heterogeneous hardware backends (CPU, CUDA, ROCm, TPU).
 
 Unlike existing frameworks that rely on heavy Python-C++ bindings, FerricML offers a **unified language stack**, providing zero-cost abstractions and compile-time guarantees for building, training, and deploying AI models.
 
