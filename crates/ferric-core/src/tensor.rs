@@ -31,11 +31,10 @@ impl Tensor {
     pub fn zeros(shape: impl Into<Shape>, dtype: TypeId) -> Self {
         let shape = shape.into();
         let numel = shape.numel();
-        let data = match dtype {
-            TypeId::Float32 => bytemuck::allocation::cast_vec(vec![0.0f32; numel]),
+        let storage = match dtype {
+            TypeId::Float32 => Arc::new(Storage::Cpu(CpuStorage::from_vec(vec![0.0f32; numel]))),
             _ => unimplemented!("Zeros for {:?}", dtype),
         };
-        let storage = Arc::new(Storage::Cpu(CpuStorage { data, len: numel * 4 }));
         Self {
             storage,
             shape: shape.clone(),
@@ -70,5 +69,18 @@ impl Tensor {
 
     pub fn storage(&self) -> Arc<Storage> {
         self.storage.clone()
+    }
+
+    pub fn reshape(&self, shape: impl Into<Shape>) -> Self {
+        let shape = shape.into();
+        assert_eq!(self.shape.numel(), shape.numel());
+        Self {
+            storage: self.storage.clone(),
+            shape: shape.clone(),
+            strides: Strides::contiguous(&shape),
+            offset: 0,
+            dtype: self.dtype,
+            grad: None,
+        }
     }
 }
